@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ranking Trimestre</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #03051a;
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── Background ─── */
+    .bg {
+      position: fixed; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, #0d2060 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 20% 80%, #061540 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, #061540 0%, transparent 60%),
+        #03051a;
+    }
+    .bg::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,180,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,180,255,.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* ─── Main wrapper ─── */
+    .container {
+      position: relative; z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+
+    /* ─── Header ─── */
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(135deg, #0d2060 0%, #0a3080 100%);
+      border: 1px solid rgba(0,180,255,.3);
+      border-radius: 50px;
+      padding: 10px 28px;
+      margin-bottom: 16px;
+      box-shadow: 0 0 24px rgba(0,150,255,.2);
+    }
+    .trophy-icon { font-size: 28px; }
+    .header-badge span {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: #7ee8ff;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(26px, 5vw, 42px);
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 0 30px rgba(0,200,255,.6);
+      letter-spacing: 2px;
+      line-height: 1.1;
+    }
+    h1 span {
+      background: linear-gradient(90deg, #00d4ff, #7b5cff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .deadline {
+      margin-top: 10px;
+      font-size: 13px;
+      color: rgba(150,200,255,.6);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .deadline strong { color: #00d4ff; }
+
+    /* ─── Podium ─── */
+    .podium {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .podium-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border-radius: 18px;
+      padding: 24px 20px 20px;
+      text-align: center;
+      transition: transform .25s;
+    }
+    .podium-card:hover { transform: translateY(-6px); }
+
+    /* 1st place */
+    .podium-card.first {
+      width: 260px;
+      background: linear-gradient(160deg, #0d3070 0%, #071a50 100%);
+      border: 2px solid #ffd700;
+      box-shadow: 0 0 40px rgba(255,215,0,.25), 0 8px 32px rgba(0,0,0,.5);
+      order: 2;
+    }
+    /* 2nd place */
+    .podium-card.second {
+      width: 210px;
+      background: linear-gradient(160deg, #0d2555 0%, #071540 100%);
+      border: 2px solid #a8c0e0;
+      box-shadow: 0 0 28px rgba(168,192,224,.15), 0 8px 24px rgba(0,0,0,.4);
+      order: 1;
+      margin-bottom: 24px;
+    }
+    /* 3rd place */
+    .podium-card.third {
+      width: 210px;
+      background: linear-gradient(160deg, #1a1840 0%, #0e0e30 100%);
+      border: 2px solid #cd7f32;
+      box-shadow: 0 0 28px rgba(205,127,50,.15), 0 8px 24px rgba(0,0,0,.4);
+      order: 3;
+      margin-bottom: 12px;
+    }
+
+    /* Position badge */
+    .pos-badge {
+      position: absolute;
+      top: -16px;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 900;
+      font-size: 16px;
+    }
+    .first .pos-badge  { background: linear-gradient(135deg,#ffd700,#ff9900); color:#000; width:44px;height:44px;font-size:20px;top:-20px; box-shadow:0 0 20px rgba(255,180,0,.5);}
+    .second .pos-badge { background: linear-gradient(135deg,#c0d0e8,#8099b8); color:#000; }
+    .third .pos-badge  { background: linear-gradient(135deg,#cd7f32,#8b4513); color:#fff; }
+
+    /* Crown */
+    .crown {
+      position: absolute;
+      top: -52px;
+      font-size: 36px;
+      filter: drop-shadow(0 0 12px rgba(255,215,0,.8));
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-6px); }
+    }
+
+    /* Photo */
+    .photo-wrap {
+      position: relative;
+      margin-bottom: 14px;
+    }
+    .photo-ring {
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      animation: spin 6s linear infinite;
+    }
+    .first  .photo-ring { background: conic-gradient(#ffd700, #ff9900, #ffd700); }
+    .second .photo-ring { background: conic-gradient(#a8c0e0, #60809a, #a8c0e0); }
+    .third  .photo-ring { background: conic-gradient(#cd7f32, #7a4010, #cd7f32); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .photo-inner {
+      position: relative;
+      z-index: 1;
+      background: #0a1535;
+      border-radius: 50%;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .first  .photo-inner { width: 100px; height: 100px; }
+    .second .photo-inner,
+    .third  .photo-inner { width: 80px;  height: 80px;  }
+
+    .photo-inner img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .photo-placeholder {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px;
+      color: rgba(100,160,255,.4);
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+    }
+    .first  .photo-placeholder { font-size: 38px; }
+
+    /* Name & value */
+    .card-name {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .first  .card-name { font-size: 20px; }
+    .second .card-name,
+    .third  .card-name { font-size: 16px; }
+
+    .card-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: rgba(150,200,255,.5);
+      margin-bottom: 4px;
+    }
+
+    .card-value {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+    }
+    .first  .card-value { font-size: 22px; color: #ffd700; text-shadow: 0 0 16px rgba(255,215,0,.5); }
+    .second .card-value { font-size: 17px; color: #a8c0e0; }
+    .third  .card-value { font-size: 17px; color: #cd7f32; }
+
+    /* Glow line */
+    .card-glow {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 0 0 16px 16px;
+    }
+    .first  .card-glow { background: linear-gradient(90deg,transparent,#ffd700,transparent); }
+    .second .card-glow { background: linear-gradient(90deg,transparent,#a8c0e0,transparent); }
+    .third  .card-glow { background: linear-gradient(90deg,transparent,#cd7f32,transparent); }
+
+    /* ─── List ─── */
+    .list-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .list-header h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #7ee8ff;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+    .list-divider {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(0,180,255,.3), transparent);
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: linear-gradient(135deg, rgba(10,30,80,.7) 0%, rgba(5,15,50,.7) 100%);
+      border: 1px solid rgba(0,100,200,.2);
+      border-radius: 14px;
+      padding: 14px 20px;
+      transition: all .2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .list-item::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, rgba(0,180,255,.6), transparent);
+      border-radius: 14px 0 0 14px;
+    }
+    .list-item:hover {
+      border-color: rgba(0,180,255,.4);
+      transform: translateX(4px);
+      box-shadow: 0 4px 20px rgba(0,100,200,.2);
+    }
+
+    .list-pos {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      color: rgba(100,160,255,.5);
+      width: 28px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .list-photo {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,150,255,.3);
+      overflow: hidden;
+      flex-shrink: 0;
+      background: #0a1535;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .list-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .list-photo .photo-placeholder { font-size: 18px; }
+
+    .list-info { flex: 1; }
+    .list-name {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      color: #fff;
+      letter-spacing: .5px;
+      margin-bottom: 4px;
+    }
+    .list-sublabel {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(150,200,255,.4);
+    }
+
+    .list-value-wrap { text-align: right; flex-shrink: 0; }
+    .list-value {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 17px;
+      color: #00d4ff;
+      text-shadow: 0 0 10px rgba(0,212,255,.4);
+    }
+    .list-value-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(100,180,255,.4);
+      margin-top: 2px;
+    }
+
+    /* Progress bar */
+    .bar-wrap {
+      height: 4px;
+      background: rgba(255,255,255,.06);
+      border-radius: 2px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    .bar {
+      height: 100%;
+      border-radius: 2px;
+      background: linear-gradient(90deg, #0070cc, #00d4ff);
+      box-shadow: 0 0 8px rgba(0,180,255,.4);
+    }
+
+    /* ─── Footer ─── */
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(100,150,255,.25);
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-badge">
+      <span class="trophy-icon">🏆</span>
+      <span>Gestores de Tráfego</span>
+    </div>
+    <h1>RANKING <span>TRIMESTRE</span></h1>
+    <p class="deadline">Encerra na semana 27 &nbsp;·&nbsp; <strong>25/04</strong></p>
+  </div>
+
+  <!-- Podium -->
+  <div class="podium">
+
+    <!-- 2nd -->
+    <div class="podium-card second">
+      <div class="pos-badge">2</div>
+      <div class="photo-wrap">
+        <div class="photo-ring"></div>
+        <div class="photo-inner">
+          <img id="photo-braga" src="Braga.jpeg" alt="Braga"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="photo-placeholder" style="display:none">B</div>
+        </div>
+      </div>
+      <div class="card-name">Braga</div>
+      <div class="card-label">Diminuição do CPL</div>
+      <div class="card-value">R$ 14,42</div>
+      <div class="card-glow"></div>
+    </div>
+
+    <!-- 1st -->
+    <div class="podium-card first">
+      <div class="crown">👑</div>
+      <div class="pos-badge">1</div>
+      <div class="photo-wrap">
+        <div class="photo-ring"></div>
+        <div class="photo-inner">
+          <img id="photo-mota" src="mota.jpg" alt="Mota"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="photo-placeholder" style="display:none">M</div>
+        </div>
+      </div>
+      <div class="card-name">Mota</div>
+      <div class="card-label">Diminuição do CPL</div>
+      <div class="card-value">R$ 16,34</div>
+      <div class="card-glow"></div>
+    </div>
+
+    <!-- 3rd -->
+    <div class="podium-card third">
+      <div class="pos-badge">3</div>
+      <div class="photo-wrap">
+        <div class="photo-ring"></div>
+        <div class="photo-inner">
+          <img id="photo-gio" src="Gio.jpg" alt="Gio"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="photo-placeholder" style="display:none">G</div>
+        </div>
+      </div>
+      <div class="card-name">Gio</div>
+      <div class="card-label">Diminuição do CPL</div>
+      <div class="card-value">R$ 9,26</div>
+      <div class="card-glow"></div>
+    </div>
+
+  </div>
+
+  <!-- Full list -->
+  <div class="list-header">
+    <h2>Classificação Completa</h2>
+    <div class="list-divider"></div>
+  </div>
+
+  <div class="list">
+
+    <!-- 4th - Bueno -->
+    <div class="list-item">
+      <div class="list-pos">4</div>
+      <div class="list-photo">
+        <img src="Bueno.jpeg" alt="Bueno"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="photo-placeholder" style="display:none">B</div>
+      </div>
+      <div class="list-info">
+        <div class="list-name">Bueno</div>
+        <div class="list-sublabel">Gestor de Tráfego</div>
+        <div class="bar-wrap"><div class="bar" style="width:51%"></div></div>
+      </div>
+      <div class="list-value-wrap">
+        <div class="list-value">R$ 8,34</div>
+        <div class="list-value-label">Diminu. CPL</div>
+      </div>
+    </div>
+
+    <!-- 5th - Victor -->
+    <div class="list-item">
+      <div class="list-pos">5</div>
+      <div class="list-photo">
+        <img src="VICTOR.jpeg" alt="Victor"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="photo-placeholder" style="display:none">V</div>
+      </div>
+      <div class="list-info">
+        <div class="list-name">Victor</div>
+        <div class="list-sublabel">Gestor de Tráfego</div>
+        <div class="bar-wrap"><div class="bar" style="width:45%"></div></div>
+      </div>
+      <div class="list-value-wrap">
+        <div class="list-value">R$ 7,43</div>
+        <div class="list-value-label">Diminu. CPL</div>
+      </div>
+    </div>
+
+    <!-- 6th - Igor -->
+    <div class="list-item">
+      <div class="list-pos">6</div>
+      <div class="list-photo">
+        <img src="Igor.jpeg" alt="Igor"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="photo-placeholder" style="display:none">I</div>
+      </div>
+      <div class="list-info">
+        <div class="list-name">Igor</div>
+        <div class="list-sublabel">Gestor de Tráfego</div>
+        <div class="bar-wrap"><div class="bar" style="width:43%"></div></div>
+      </div>
+      <div class="list-value-wrap">
+        <div class="list-value">R$ 7,10</div>
+        <div class="list-value-label">Diminu. CPL</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">Conexão MTDS &nbsp;·&nbsp; 2026</div>
+
+</div>
+</body>
+</html>
