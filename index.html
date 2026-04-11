@@ -1,423 +1,780 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>NBP · Performance Dashboard</title>
+<title>NBP · Pontus Finance · Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-
 :root{
-  --bg:#070710;
-  --s1:#0d0d1a;
-  --s2:#111124;
-  --s3:#16162e;
-  --border:#1c1c38;
-  --border2:#252545;
-  --accent:#4f6ef7;
-  --accent2:#7c3aed;
-  --green:#00d87d;
-  --green-dim:rgba(0,216,125,0.1);
-  --yellow:#f5c542;
-  --yellow-dim:rgba(245,197,66,0.1);
-  --red:#f84960;
-  --red-dim:rgba(248,73,96,0.1);
-  --blue:#38bdf8;
-  --text:#e2e8f0;
-  --muted:#4a5080;
-  --mono:'IBM Plex Mono',monospace;
-  --sans:'Inter',sans-serif;
+  --bg:#0b0e1a;
+  --sidebar:#0e1120;
+  --card:#131728;
+  --card2:#171c30;
+  --border:rgba(255,255,255,0.06);
+  --border2:rgba(255,255,255,0.04);
+  --p1:#7c3aed;
+  --p2:#a855f7;
+  --t1:#06b6d4;
+  --t2:#22d3ee;
+  --green:#10b981;
+  --red:#f43f5e;
+  --yellow:#f59e0b;
+  --text:#f1f5f9;
+  --muted:#64748b;
+  --muted2:#475569;
+  --font:'Inter',sans-serif;
+  --sidebar-w:240px;
 }
 
-body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;padding:28px 32px;}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text)}
 
-/* ─── HEADER ─── */
-.header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid var(--border)}
-.header-left{}
-.logo{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
-.title{font-size:22px;font-weight:700;letter-spacing:-0.5px}
-.subtitle{font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
-.header-right{display:flex;gap:12px;align-items:center}
-.live-badge{display:flex;align-items:center;gap:6px;background:rgba(0,216,125,0.1);border:1px solid rgba(0,216,125,0.25);color:var(--green);font-size:10px;font-weight:600;padding:5px 12px;border-radius:4px;font-family:var(--mono);letter-spacing:1px}
+/* ─── LAYOUT ─────────────────────────────────────── */
+.layout{display:flex;min-height:100vh}
+
+/* ─── SIDEBAR ────────────────────────────────────── */
+.sidebar{
+  width:var(--sidebar-w);flex-shrink:0;background:var(--sidebar);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;bottom:0;
+  overflow-y:auto;z-index:10;
+}
+.sb-brand{padding:24px 20px 16px;border-bottom:1px solid var(--border)}
+.sb-logo{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.sb-logo-icon{
+  width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,var(--p1),var(--p2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:800;color:#fff
+}
+.sb-logo-text{font-size:15px;font-weight:700;letter-spacing:-0.3px}
+.sb-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.sb-section{padding:16px 12px 8px;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
+.sb-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:8px;margin:2px 8px;
+  cursor:pointer;transition:all 0.15s;font-size:12px;font-weight:500;color:var(--muted2);
+  border:1px solid transparent;
+}
+.sb-item:hover{background:rgba(124,58,237,0.08);color:var(--text)}
+.sb-item.active{background:rgba(124,58,237,0.15);color:var(--p2);border-color:rgba(124,58,237,0.2)}
+.sb-item svg{width:14px;height:14px;opacity:0.7;flex-shrink:0}
+.sb-creative-item{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;border-radius:8px;margin:2px 8px;
+  cursor:pointer;transition:all 0.15s;
+  border:1px solid transparent;
+}
+.sb-creative-item:hover{background:rgba(255,255,255,0.03)}
+.sb-creative-item.active{background:rgba(124,58,237,0.12);border-color:rgba(124,58,237,0.2)}
+.sb-thumb{width:32px;height:32px;border-radius:6px;object-fit:cover;border:1px solid var(--border);background:var(--card2);flex-shrink:0}
+.sb-creative-info{flex:1;min-width:0}
+.sb-creative-name{font-size:11px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.sb-creative-stat{font-size:9px;color:var(--muted);margin-top:1px}
+.sb-badge{font-size:9px;padding:2px 6px;border-radius:10px;font-weight:600;margin-left:auto;flex-shrink:0}
+.badge-g{background:rgba(16,185,129,0.15);color:var(--green)}
+.badge-y{background:rgba(245,158,11,0.15);color:var(--yellow)}
+.badge-r{background:rgba(244,63,94,0.15);color:var(--red)}
+.sb-footer{margin-top:auto;padding:16px;border-top:1px solid var(--border)}
+.sb-footer-text{font-size:9px;color:var(--muted);text-align:center;line-height:1.6}
+
+/* ─── MAIN ───────────────────────────────────────── */
+.main{margin-left:var(--sidebar-w);flex:1;padding:28px 32px;min-width:0}
+
+/* ─── TOPBAR ─────────────────────────────────────── */
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px}
+.topbar-title{font-size:20px;font-weight:700;letter-spacing:-0.5px}
+.topbar-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.topbar-right{display:flex;gap:10px;align-items:center}
+.badge-live{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);
+  color:var(--green);font-size:10px;font-weight:600;padding:6px 14px;border-radius:20px;
+}
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
-.date-badge{background:var(--s2);border:1px solid var(--border);color:var(--muted);font-size:10px;font-family:var(--mono);padding:5px 12px;border-radius:4px;letter-spacing:0.5px}
+.badge-date{
+  background:var(--card);border:1px solid var(--border);
+  color:var(--muted);font-size:11px;padding:6px 14px;border-radius:20px;
+}
 
-/* ─── KPI STRIP ─── */
-.kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:28px}
-.kpi{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:16px 18px;position:relative;overflow:hidden}
-.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0.5}
-.kpi-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-family:var(--mono);margin-bottom:8px}
-.kpi-val{font-size:22px;font-weight:700;font-family:var(--mono);letter-spacing:-1px}
-.kpi-sub{font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+/* ─── KPI CARDS ──────────────────────────────────── */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px}
+.kpi-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:20px;position:relative;overflow:hidden;
+}
+.kpi-card.featured{background:linear-gradient(135deg,rgba(124,58,237,0.3),rgba(168,85,247,0.15));border-color:rgba(124,58,237,0.3)}
+.kpi-card.featured2{background:linear-gradient(135deg,rgba(6,182,212,0.2),rgba(34,211,238,0.08));border-color:rgba(6,182,212,0.2)}
+.kpi-glow{position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;opacity:0.15;filter:blur(20px)}
+.kpi-glow-p{background:var(--p2)}
+.kpi-glow-t{background:var(--t1)}
+.kpi-label{font-size:10px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.kpi-val{font-size:26px;font-weight:800;letter-spacing:-1px;line-height:1}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:6px}
+.kpi-trend{font-size:10px;font-weight:600;margin-top:4px}
+.trend-up{color:var(--green)}
+.trend-down{color:var(--red)}
 
-/* ─── AD CARD ─── */
-.ad-card{background:var(--s1);border:1px solid var(--border);border-radius:10px;margin-bottom:20px;overflow:hidden}
-.ad-header{display:flex;align-items:center;gap:16px;padding:18px 22px;border-bottom:1px solid var(--border);background:var(--s2)}
-.ad-thumb{width:52px;height:52px;border-radius:6px;object-fit:cover;border:1px solid var(--border2);flex-shrink:0;background:var(--s3)}
-.ad-thumb-placeholder{width:52px;height:52px;border-radius:6px;background:var(--s3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.ad-info{flex:1;min-width:0}
-.ad-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
-.ad-adset{font-size:10px;color:var(--muted);font-family:var(--mono)}
-.ad-meta{display:flex;gap:8px;align-items:center;margin-left:auto;flex-shrink:0}
-.preview-btn{display:flex;align-items:center;gap:5px;background:rgba(79,110,247,0.1);border:1px solid rgba(79,110,247,0.3);color:var(--accent);font-size:10px;font-family:var(--mono);padding:5px 12px;border-radius:4px;text-decoration:none;transition:all 0.2s;letter-spacing:0.5px}
-.preview-btn:hover{background:rgba(79,110,247,0.2)}
-.ad-status{font-size:9px;font-family:var(--mono);padding:3px 8px;border-radius:3px;background:var(--green-dim);color:var(--green);border:1px solid rgba(0,216,125,0.2);letter-spacing:1px}
+/* ─── GRID 2 COL ─────────────────────────────────── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px;margin-bottom:16px}
 
-/* ─── TOTALS ROW ─── */
-.ad-totals{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border-top:1px solid var(--border)}
-.total-cell{background:var(--s1);padding:12px 16px}
-.total-label{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:4px}
-.total-val{font-size:14px;font-weight:600;font-family:var(--mono)}
+/* ─── CHART CARD ─────────────────────────────────── */
+.chart-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:22px;
+}
+.chart-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.chart-title{font-size:13px;font-weight:600}
+.chart-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.chart-legend{display:flex;gap:14px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)}
+.legend-dot{width:8px;height:8px;border-radius:50%}
+.chart-container{position:relative}
 
-/* ─── TABLE ─── */
-.table-wrap{overflow-x:auto}
+/* ─── CREATIVE SECTION ───────────────────────────── */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;margin-top:8px}
+.section-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.section-title::before{content:'';display:block;width:3px;height:16px;border-radius:2px;background:linear-gradient(var(--p1),var(--p2))}
+
+.creative-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;margin-bottom:16px;overflow:hidden;
+}
+.creative-header{
+  display:flex;align-items:center;gap:14px;
+  padding:18px 22px;border-bottom:1px solid var(--border);
+  background:linear-gradient(90deg,rgba(124,58,237,0.06),transparent);
+}
+.creative-thumb{width:56px;height:56px;border-radius:8px;object-fit:cover;border:1px solid var(--border);background:var(--card2);flex-shrink:0}
+.creative-info{flex:1}
+.creative-name{font-size:13px;font-weight:600;margin-bottom:4px}
+.creative-adset{font-size:10px;color:var(--muted)}
+.creative-header-stats{display:flex;gap:20px;margin-left:auto}
+.ch-stat{text-align:right}
+.ch-stat-val{font-size:16px;font-weight:700;line-height:1}
+.ch-stat-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-top:2px}
+.preview-link{
+  display:flex;align-items:center;gap:4px;
+  color:var(--p2);font-size:10px;font-weight:500;text-decoration:none;
+  background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);
+  padding:5px 12px;border-radius:6px;transition:all 0.15s;
+}
+.preview-link:hover{background:rgba(124,58,237,0.2)}
+
+/* MINI KPIs inside creative */
+.creative-kpis{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border2);border-bottom:1px solid var(--border)}
+.ck{background:var(--card2);padding:12px 14px}
+.ck-lbl{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px}
+.ck-val{font-size:13px;font-weight:600}
+
+/* VIDEO METRICS BAR */
+.video-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border2);border-bottom:1px solid var(--border)}
+.vb{background:rgba(124,58,237,0.04);padding:12px 14px}
+.vb-lbl{font-size:8px;color:var(--p2);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px}
+.vb-val{font-size:13px;font-weight:600}
+.vb-desc{font-size:8px;color:var(--muted);margin-top:2px}
+
+/* DAY TABLE */
+.day-table-wrap{overflow-x:auto;padding:0 0 4px}
 table{width:100%;border-collapse:collapse;font-size:11px}
 thead th{
-  background:var(--s3);
-  color:var(--muted);
-  font-size:8px;
-  font-family:var(--mono);
-  text-transform:uppercase;
-  letter-spacing:1px;
-  padding:10px 14px;
-  text-align:right;
-  border-bottom:1px solid var(--border);
-  white-space:nowrap;
-  font-weight:500;
+  padding:10px 14px;text-align:right;
+  background:rgba(0,0,0,0.2);color:var(--muted);
+  font-size:8px;text-transform:uppercase;letter-spacing:1px;font-weight:600;
+  border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;
 }
 thead th:first-child{text-align:left}
-tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s}
+tbody tr{border-bottom:1px solid var(--border2);transition:background 0.1s}
 tbody tr:hover{background:rgba(255,255,255,0.02)}
 tbody tr:last-child{border-bottom:none}
-tbody td{padding:10px 14px;text-align:right;font-family:var(--mono);font-size:11px;white-space:nowrap}
-tbody td:first-child{text-align:left;font-size:10px;color:var(--muted)}
+tbody td{padding:10px 14px;text-align:right;white-space:nowrap;font-size:11px}
+tbody td:first-child{text-align:left;color:var(--muted);font-size:10px}
+.total-row td{background:rgba(124,58,237,0.06);font-weight:600;border-top:1px solid rgba(124,58,237,0.15)}
 
-/* ─── SECTION DIVIDER ─── */
-.section-label{font-size:7px;color:var(--border2);font-family:var(--mono);letter-spacing:2px;text-transform:uppercase;padding:6px 14px;background:var(--bg);border-bottom:1px solid var(--border);border-top:1px solid var(--border)}
+/* COLOR CHIPS */
+.chip{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;min-width:52px}
+.g{background:rgba(16,185,129,0.12);color:#34d399;border:1px solid rgba(16,185,129,0.15)}
+.y{background:rgba(245,158,11,0.12);color:#fbbf24;border:1px solid rgba(245,158,11,0.15)}
+.r{background:rgba(244,63,94,0.12);color:#fb7185;border:1px solid rgba(244,63,94,0.15)}
+.n{color:var(--muted)}
 
-/* ─── METRIC CHIP ─── */
-.chip{display:inline-block;padding:2px 7px;border-radius:3px;font-size:10px;font-family:var(--mono);font-weight:500}
-.chip-g{background:var(--green-dim);color:var(--green);border:1px solid rgba(0,216,125,0.2)}
-.chip-y{background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(245,197,66,0.2)}
-.chip-r{background:var(--red-dim);color:var(--red);border:1px solid rgba(248,73,96,0.2)}
-.chip-n{background:var(--s3);color:var(--muted);border:1px solid var(--border)}
+/* GROUP HEADER row */
+.group-th{background:rgba(0,0,0,0.3)!important;color:var(--muted2)!important;font-size:7px!important;letter-spacing:1.5px!important;text-align:center!important;border-bottom:1px solid rgba(124,58,237,0.15)!important}
 
-/* ─── LEGEND ─── */
-.legend{display:flex;gap:20px;align-items:center;padding:14px 22px;border-top:1px solid var(--border);background:var(--bg)}
-.legend-item{display:flex;align-items:center;gap:6px;font-size:9px;color:var(--muted);font-family:var(--mono)}
-.legend-dot{width:6px;height:6px;border-radius:2px}
+/* CHART inside creative card */
+.creative-chart{padding:18px 22px;border-bottom:1px solid var(--border)}
 
-/* ─── FOOTER ─── */
-.footer{text-align:center;font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:28px;padding-top:16px;border-top:1px solid var(--border);letter-spacing:0.5px}
+/* FOOTER */
+.footer{margin-top:32px;padding:18px;text-align:center;font-size:10px;color:var(--muted);border-top:1px solid var(--border);line-height:1.7}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(124,58,237,0.3);border-radius:2px}
 </style>
 </head>
 <body>
+<div class="layout">
 
-<!-- HEADER -->
-<div class="header">
-  <div class="header-left">
-    <div class="logo">NBP · Pontus Finance</div>
-    <div class="title">Campaign Intelligence Report</div>
-    <div class="subtitle">ABO · LEAD PONTUS · ACT_1664503901571256</div>
+<!-- ═══ SIDEBAR ═══════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">P</div>
+      <div class="sb-logo-text">Pontus Finance</div>
+    </div>
+    <div class="sb-sub">NBP · ABO Lead Captação</div>
   </div>
-  <div class="header-right">
-    <div class="date-badge">28 MAR – 06 ABR 2026</div>
-    <div class="live-badge"><span class="live-dot"></span>LIVE</div>
-  </div>
-</div>
 
-<!-- KPI STRIP -->
-<div class="kpi-strip">
-  <div class="kpi">
-    <div class="kpi-label">Investimento</div>
-    <div class="kpi-val" style="color:var(--blue)">€374,61</div>
-    <div class="kpi-sub">10 dias ativos</div>
+  <div class="sb-section">Navegação</div>
+  <div class="sb-item active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Visão Geral
   </div>
-  <div class="kpi">
-    <div class="kpi-label">Leads</div>
-    <div class="kpi-val" style="color:var(--green)">43</div>
-    <div class="kpi-sub">4 criativos ativos</div>
+  <div class="sb-item" onclick="scrollTo(0,document.getElementById('creatives').offsetTop-20)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.89L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+    Criativos
   </div>
-  <div class="kpi">
-    <div class="kpi-label">CPL Médio</div>
-    <div class="kpi-val" style="color:var(--yellow)">€8,71</div>
-    <div class="kpi-sub">Best: €6,19</div>
+
+  <div class="sb-section">Criativos Ativos</div>
+
+  <div class="sb-creative-item active" onclick="scrollToAd('ad-6897272042554')">
+    <img class="sb-thumb" src="https://scontent.fbnu5-1.fna.fbcdn.net/v/t15.5256-10/661169855_1655733072140064_5908846331102137081_n.jpg?_nc_cat=110&ccb=1-7&_nc_ohc=bPFdQGJodZYQ7kNvwECcDrH&_nc_oc=Adq7S7nxYSRMfDxGFYVDhdQAosE3uOyXTN1eonNL858ZBepm5MuKhR6fSa3R5U9tEo3wDUfrHPRE-Uec4Go5pCNW&_nc_zt=23&_nc_ht=scontent.fbnu5-1.fna&edm=AOgd6ZUEAAAA&oh=00_Af219tNkKV1xKUGLsbRMsraUoCjpNe3X0pYDIPfcPOYYDg&oe=69E018FF" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2232%22 height=%2232%22><rect width=%2232%22 height=%2232%22 fill=%22%23171c30%22 rx=%226%22/><text x=%2250%25%22 y=%2255%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22%23475569%22>🎬</text></svg>'"/>
+    <div class="sb-creative-info">
+      <div class="sb-creative-name">Post 01/04 (v1)</div>
+      <div class="sb-creative-stat">R$117,61 · 19 leads</div>
+    </div>
+    <span class="sb-badge badge-g">TOP</span>
   </div>
-  <div class="kpi">
-    <div class="kpi-label">LPV Total</div>
-    <div class="kpi-val">446</div>
-    <div class="kpi-sub">Connect Rate: 67%</div>
+
+  <div class="sb-creative-item" onclick="scrollToAd('ad-6896512221354')">
+    <img class="sb-thumb" src="https://scontent.fbnu5-1.fna.fbcdn.net/v/t15.5256-10/659785304_963616872826725_4981432250761069541_n.jpg?_nc_cat=109&ccb=1-7&_nc_ohc=ON5Vfh3bmZ0Q7kNvwG72LYX&_nc_oc=AdpzXQxjKiBmYLdSaBx2jxIX2mW3mxSDx2zCyxAbIf042FrpffWaEJJDUppod8ITuwSLUmqEstv20dItqP2p7dbc&_nc_zt=23&_nc_ht=scontent.fbnu5-1.fna&edm=AOgd6ZUEAAAA&oh=00_Af25-WCF4yBESYQEhKA5wjxZPEGEe10CinMzGB9XehOblA&oe=69E016FB" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2232%22 height=%2232%22><rect width=%2232%22 height=%2232%22 fill=%22%23171c30%22 rx=%226%22/><text x=%2250%25%22 y=%2255%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22%23475569%22>🎬</text></svg>'"/>
+    <div class="sb-creative-info">
+      <div class="sb-creative-name">Criativo Nativo Venda</div>
+      <div class="sb-creative-stat">R$142,26 · 16 leads</div>
+    </div>
+    <span class="sb-badge badge-y">BOM</span>
   </div>
-  <div class="kpi">
-    <div class="kpi-label">Impressões</div>
-    <div class="kpi-val">14.062</div>
-    <div class="kpi-sub">Alcance estimado</div>
+
+  <div class="sb-creative-item" onclick="scrollToAd('ad-6897689079354')">
+    <img class="sb-thumb" src="https://scontent.fbnu5-1.fna.fbcdn.net/v/t15.5256-10/667868105_945780698237224_8213436685143829287_n.jpg?_nc_cat=104&ccb=1-7&_nc_ohc=NvdW77BNCc8Q7kNvwEtK8JP&_nc_oc=Adoa-BFKZTBNZ3ePTQOz-e9e7ueMr_g6BINecQnc6DidflQJzdCGYMhPddCj2WjRqVVR6MeXKoMxjbts2hGJnHsl&_nc_zt=23&_nc_ht=scontent.fbnu5-1.fna&edm=AOgd6ZUEAAAA&oh=00_Af2zy32JPlyMFlQk-pwXWbRDrb5m7QDjj-4KF9_egDYNCg&oe=69E01904" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2232%22 height=%2232%22><rect width=%2232%22 height=%2232%22 fill=%22%23171c30%22 rx=%226%22/><text x=%2250%25%22 y=%2255%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22%23475569%22>🎬</text></svg>'"/>
+    <div class="sb-creative-info">
+      <div class="sb-creative-name">Post 01/04 (v2)</div>
+      <div class="sb-creative-stat">R$70,67 · 4 leads</div>
+    </div>
+    <span class="sb-badge badge-r">REVISAR</span>
   </div>
+
+  <div class="sb-creative-item" onclick="scrollToAd('ad-6896489872154')">
+    <img class="sb-thumb" src="https://scontent.fbnu5-1.fna.fbcdn.net/v/t15.5256-10/659836534_1641937193796249_2316537676487209507_n.jpg?_nc_cat=109&ccb=1-7&_nc_ohc=T3FABTjOv10Q7kNvwHn5k8B&_nc_oc=AdohNnzaz3Bd4EAdbcUA2e9g_tAl4HQe-GBh5wSYGMAba5NXNgQyDqaG0ypkwwYSZn0D0JzS3SjurEHOw1J-y8IW&_nc_zt=23&_nc_ht=scontent.fbnu5-1.fna&edm=AOgd6ZUEAAAA&oh=00_Af0tjg7WudHCxgNv5Xu_Fh1JPzaKllKYC3-Jb3ekJv6pxQ&oe=69E00DA1" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2232%22 height=%2232%22><rect width=%2232%22 height=%2232%22 fill=%22%23171c30%22 rx=%226%22/><text x=%2250%25%22 y=%2255%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22%23475569%22>🎬</text></svg>'"/>
+    <div class="sb-creative-info">
+      <div class="sb-creative-name">Criativo 3</div>
+      <div class="sb-creative-stat">R$43,71 · 4 leads</div>
+    </div>
+    <span class="sb-badge badge-y">TESTE</span>
+  </div>
+
+  <div class="sb-footer">
+    <div class="sb-footer-text">Meta Graph API v19<br>Atualizado · 06 Abr 2026<br>act_1664503901571256</div>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ════════════════════════════════════════ -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Campaign Intelligence</div>
+      <div class="topbar-sub">ABO · Lead Pontus · Add to Cart BT01</div>
+    </div>
+    <div class="topbar-right">
+      <div class="badge-date">28 Mar – 06 Abr 2026</div>
+      <div class="badge-live"><span class="live-dot"></span>LIVE</div>
+    </div>
+  </div>
+
+  <!-- KPI STRIP -->
+  <div class="kpi-grid">
+    <div class="kpi-card featured">
+      <div class="kpi-glow kpi-glow-p"></div>
+      <div class="kpi-label">Investimento Total</div>
+      <div class="kpi-val">R$ 374,25</div>
+      <div class="kpi-sub">4 criativos · 10 dias</div>
+    </div>
+    <div class="kpi-card featured2">
+      <div class="kpi-glow kpi-glow-t"></div>
+      <div class="kpi-label">Total de Leads</div>
+      <div class="kpi-val" style="color:var(--green)">43</div>
+      <div class="kpi-sub">Pixel + Formulário</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">CPL Médio</div>
+      <div class="kpi-val" style="color:var(--yellow)">R$ 8,70</div>
+      <div class="kpi-trend trend-up">↓ Melhor: R$6,19</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">LPV Total</div>
+      <div class="kpi-val">446</div>
+      <div class="kpi-sub">Connect Rate: 67%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">ThruPlay Médio</div>
+      <div class="kpi-val">10,4%</div>
+      <div class="kpi-sub">Retenção pós hook</div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW -->
+  <div class="grid3" style="margin-bottom:20px">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Gasto Diário × Leads</div>
+          <div class="chart-sub">Evolução da campanha — todos os criativos</div>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--p2)"></div>Gasto (R$)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Leads</div>
+        </div>
+      </div>
+      <div class="chart-container" style="height:200px"><canvas id="mainChart"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Leads por Criativo</div>
+          <div class="chart-sub">Distribuição total</div>
+        </div>
+      </div>
+      <div class="chart-container" style="height:200px"><canvas id="donutChart"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">CPL por Criativo</div>
+          <div class="chart-sub">Custo por lead</div>
+        </div>
+      </div>
+      <div class="chart-container" style="height:200px"><canvas id="cplChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- CREATIVES -->
+  <div id="creatives">
+    <div class="section-header">
+      <div class="section-title">Performance por Criativo</div>
+    </div>
+    <div id="creative-container"></div>
+  </div>
+
+  <div class="footer">
+    Pontus Finance · NBP · act_1664503901571256 · Meta Graph API v19 · 28 Mar – 06 Abr 2026<br>
+    ⚠ Visitas ao perfil Instagram e Seguidores não são disponibilizados via Marketing API — consultar Instagram Insights separadamente
+  </div>
+</main>
 </div>
 
 <script>
-// ─── DATA ───────────────────────────────────────────────────────────────
-const ads = [
+// ═══ DATA ═══════════════════════════════════════════════════════════════
+const ADS = [
   {
     id:"6897272042554",
     name:"CRIATIVO NATIVO · POST 01/04 (v1)",
-    adset:"AD SET 1.3 · CRIATIVO NATIVO 2",
+    shortName:"Post 01/04 v1",
+    adset:"AD SET 1.3 · Criativo Nativo 2",
     thumb:"https://scontent.fbnu5-1.fna.fbcdn.net/v/t15.5256-10/661169855_1655733072140064_5908846331102137081_n.jpg?_nc_cat=110&ccb=1-7&_nc_ohc=bPFdQGJodZYQ7kNvwECcDrH&_nc_oc=Adq7S7nxYSRMfDxGFYVDhdQAosE3uOyXTN1eonNL858ZBepm5MuKhR6fSa3R5U9tEo3wDUfrHPRE-Uec4Go5pCNW&_nc_zt=23&_nc_ht=scontent.fbnu5-1.fna&edm=AOgd6ZUEAAAA&oh=00_Af219tNkKV1xKUGLsbRMsraUoCjpNe3X0pYDIPfcPOYYDg&oe=69E018FF",
+    badge:"TOP",badgeClass:"g",
     days:[
-      {d:"01/04",spend:12.08,imp:737,oc:39,lpv:28,leads:0,thru:102,vplay:709,v3s:286},
-      {d:"02/04",spend:33.14,imp:1864,oc:87,lpv:71,leads:4,thru:252,vplay:1801,v3s:667},
-      {d:"03/04",spend:31.42,imp:1693,oc:94,lpv:86,leads:9,thru:239,vplay:1647,v3s:678},
-      {d:"04/04",spend:21.57,imp:1342,oc:51,lpv:46,leads:3,thru:153,vplay:1294,v3s:460},
-      {d:"06/04",spend:19.40,imp:1206,oc:34,lpv:28,leads:3,thru:118,vplay:1183,v3s:409},
+      {d:"01/04",spend:12.08,imp:737, oc:39,lpv:28,leads:0, thru:102,vplay:709, v3s:286},
+      {d:"02/04",spend:33.14,imp:1864,oc:87,lpv:71,leads:4, thru:252,vplay:1801,v3s:667},
+      {d:"03/04",spend:31.42,imp:1693,oc:94,lpv:86,leads:9, thru:239,vplay:1647,v3s:678},
+      {d:"04/04",spend:21.57,imp:1342,oc:51,lpv:46,leads:3, thru:153,vplay:1294,v3s:460},
+      {d:"06/04",spend:19.40,imp:1206,oc:34,lpv:28,leads:3, thru:118,vplay:1183,v3s:409},
     ]
   },
   {
     id:"6896512221354",
     name:"CRIATIVO NATIVO · VENDA",
-    adset:"AD SET 1.2 · CRIATIVO NATIVO",
+    shortName:"Nativo Venda",
+    adset:"AD SET 1.2 · Criativo Nativo",
     thumb:"https://scontent.fbnu5-1.fna.fbcdn.net/v/t15.5256-10/659785304_963616872826725_4981432250761069541_n.jpg?_nc_cat=109&ccb=1-7&_nc_ohc=ON5Vfh3bmZ0Q7kNvwG72LYX&_nc_oc=AdpzXQxjKiBmYLdSaBx2jxIX2mW3mxSDx2zCyxAbIf042FrpffWaEJJDUppod8ITuwSLUmqEstv20dItqP2p7dbc&_nc_zt=23&_nc_ht=scontent.fbnu5-1.fna&edm=AOgd6ZUEAAAA&oh=00_Af25-WCF4yBESYQEhKA5wjxZPEGEe10CinMzGB9XehOblA&oe=69E016FB",
+    badge:"BOM",badgeClass:"y",
     days:[
-      {d:"31/03",spend:25.35,imp:1255,oc:31,lpv:33,leads:5,thru:160,vplay:1211,v3s:333},
-      {d:"01/04",spend:36.17,imp:2304,oc:37,lpv:28,leads:4,thru:256,vplay:2216,v3s:563},
-      {d:"02/04",spend:32.44,imp:2044,oc:29,lpv:22,leads:3,thru:195,vplay:1964,v3s:481},
-      {d:"03/04",spend:24.98,imp:1482,oc:26,lpv:22,leads:4,thru:157,vplay:1440,v3s:375},
-      {d:"04/04",spend:20.12,imp:1037,oc:19,lpv:16,leads:0,thru:106,vplay:996,v3s:262},
-      {d:"06/04",spend:3.20, imp:202, oc:2, lpv:2, leads:0,thru:9,  vplay:197, v3s:46},
+      {d:"31/03",spend:25.35,imp:1255,oc:31,lpv:33,leads:5, thru:160,vplay:1211,v3s:333},
+      {d:"01/04",spend:36.17,imp:2304,oc:37,lpv:28,leads:4, thru:256,vplay:2216,v3s:563},
+      {d:"02/04",spend:32.44,imp:2044,oc:29,lpv:22,leads:3, thru:195,vplay:1964,v3s:481},
+      {d:"03/04",spend:24.98,imp:1482,oc:26,lpv:22,leads:4, thru:157,vplay:1440,v3s:375},
+      {d:"04/04",spend:20.12,imp:1037,oc:19,lpv:16,leads:0, thru:106,vplay:996, v3s:262},
+      {d:"06/04",spend:3.20, imp:202, oc:2, lpv:2, leads:0, thru:9,  vplay:197, v3s:46},
     ]
   },
   {
     id:"6897689079354",
     name:"CRIATIVO NATIVO · POST 01/04 (v2)",
-    adset:"AD SET 1.4 · CRIATIVO NATIVO 3 · POST 02/04",
+    shortName:"Post 01/04 v2",
+    adset:"AD SET 1.4 · Criativo Nativo 3 · Post 02/04",
     thumb:"https://scontent.fbnu5-1.fna.fbcdn.net/v/t15.5256-10/667868105_945780698237224_8213436685143829287_n.jpg?_nc_cat=104&ccb=1-7&_nc_ohc=NvdW77BNCc8Q7kNvwEtK8JP&_nc_oc=Adoa-BFKZTBNZ3ePTQOz-e9e7ueMr_g6BINecQnc6DidflQJzdCGYMhPddCj2WjRqVVR6MeXKoMxjbts2hGJnHsl&_nc_zt=23&_nc_ht=scontent.fbnu5-1.fna&edm=AOgd6ZUEAAAA&oh=00_Af2zy32JPlyMFlQk-pwXWbRDrb5m7QDjj-4KF9_egDYNCg&oe=69E01904",
+    badge:"REVISAR",badgeClass:"r",
     days:[
-      {d:"02/04",spend:22.03,imp:1372,oc:19,lpv:13,leads:1,thru:103,vplay:1305,v3s:235},
-      {d:"03/04",spend:24.98,imp:1451,oc:14,lpv:14,leads:2,thru:119,vplay:1372,v3s:256},
-      {d:"04/04",spend:19.94,imp:981, oc:16,lpv:13,leads:0,thru:72, vplay:941, v3s:179},
-      {d:"06/04",spend:3.72, imp:175, oc:1, lpv:1, leads:1,thru:8,  vplay:169, v3s:29},
+      {d:"02/04",spend:22.03,imp:1372,oc:19,lpv:13,leads:1, thru:103,vplay:1305,v3s:235},
+      {d:"03/04",spend:24.98,imp:1451,oc:14,lpv:14,leads:2, thru:119,vplay:1372,v3s:256},
+      {d:"04/04",spend:19.94,imp:981, oc:16,lpv:13,leads:0, thru:72, vplay:941, v3s:179},
+      {d:"06/04",spend:3.72, imp:175, oc:1, lpv:1, leads:1, thru:8,  vplay:169, v3s:29},
     ]
   },
   {
     id:"6896489872154",
     name:"CRIATIVO 3",
-    adset:"AD SET 1.1 · TESTE",
+    shortName:"Criativo 3",
+    adset:"AD SET 1.1 · Teste",
     thumb:"https://scontent.fbnu5-1.fna.fbcdn.net/v/t15.5256-10/659836534_1641937193796249_2316537676487209507_n.jpg?_nc_cat=109&ccb=1-7&_nc_ohc=T3FABTjOv10Q7kNvwHn5k8B&_nc_oc=AdohNnzaz3Bd4EAdbcUA2e9g_tAl4HQe-GBh5wSYGMAba5NXNgQyDqaG0ypkwwYSZn0D0JzS3SjurEHOw1J-y8IW&_nc_zt=23&_nc_ht=scontent.fbnu5-1.fna&edm=AOgd6ZUEAAAA&oh=00_Af0tjg7WudHCxgNv5Xu_Fh1JPzaKllKYC3-Jb3ekJv6pxQ&oe=69E00DA1",
+    badge:"TESTE",badgeClass:"y",
     days:[
-      {d:"31/03",spend:33.13,imp:1411,oc:16,lpv:13,leads:3,thru:93, vplay:1302,v3s:267},
-      {d:"01/04",spend:10.58,imp:506, oc:10,lpv:10,leads:1,thru:38, vplay:473, v3s:82},
+      {d:"31/03",spend:33.13,imp:1411,oc:16,lpv:13,leads:3, thru:93, vplay:1302,v3s:267},
+      {d:"01/04",spend:10.58,imp:506, oc:10,lpv:10,leads:1, thru:38, vplay:473, v3s:82},
     ]
   }
 ];
 
-// ─── CHIP HELPERS ────────────────────────────────────────────────────────
-function chipExitCTR(v){
-  if(v===null||isNaN(v))return'<span class="chip chip-n">—</span>';
-  let cl=v>=2?"chip-g":v>=1?"chip-y":"chip-r";
-  return`<span class="chip ${cl}">${v.toFixed(2)}%</span>`;
+// ═══ HELPERS ════════════════════════════════════════════════════════════
+const R = v => v==null||!isFinite(v)?null:v;
+const fmt = (v,d=2)=>v==null?'—':`R$ ${v.toFixed(d).replace('.',',')}`;
+const fmtPct = v=>v==null?'—':`${v.toFixed(1)}%`;
+const fmtN = v=>v==null||v===0?'—':v;
+
+function chip(v, thresholds, fmt_fn){
+  if(v==null||!isFinite(v)) return `<span class="n">—</span>`;
+  const[g,y]=thresholds; // green if >= g, yellow if >= y, red otherwise (higher=better)
+  // for inverted (lower=better), pass negative thresholds pattern via object
+  let cls = v>=g?'g':v>=y?'y':'r';
+  return `<span class="chip ${cls}">${fmt_fn(v)}</span>`;
 }
-function chipConnect(v){
-  if(!v||isNaN(v))return'<span class="chip chip-n">—</span>';
-  let cl=v>=70?"chip-g":v>=40?"chip-y":"chip-r";
-  return`<span class="chip ${cl}">${v.toFixed(0)}%</span>`;
-}
-function chipCPL(v){
-  if(!v||isNaN(v)||!isFinite(v))return'<span class="chip chip-n">—</span>';
-  let cl=v<=8?"chip-g":v<=14?"chip-y":"chip-r";
-  return`<span class="chip ${cl}">€${v.toFixed(2)}</span>`;
-}
-function chipCPLPV(v){
-  if(!v||isNaN(v)||!isFinite(v))return'<span class="chip chip-n">—</span>';
-  let cl=v<=3?"chip-g":v<=6?"chip-y":"chip-r";
-  return`<span class="chip ${cl}">€${v.toFixed(2)}</span>`;
-}
-function chip1sRet(v){
-  if(v===null||isNaN(v))return'<span class="chip chip-n">—</span>';
-  let cl=v>=90?"chip-g":v>=75?"chip-y":"chip-r";
-  return`<span class="chip ${cl}">${v.toFixed(1)}%</span>`;
-}
-function chipHook(v){
-  if(v===null||isNaN(v))return'<span class="chip chip-n">—</span>';
-  let cl=v>=10?"chip-g":v>=5?"chip-y":"chip-r";
-  return`<span class="chip ${cl}">${v.toFixed(1)}%</span>`;
-}
-function chipDrop(v){
-  if(v===null||isNaN(v))return'<span class="chip chip-n">—</span>';
-  let cl=v>=8?"chip-g":v>=4?"chip-y":"chip-r";
-  return`<span class="chip ${cl}">${v.toFixed(1)}%</span>`;
-}
-function plain(v,fmt){
-  if(v===0||v===null||isNaN(v))return'<span style="color:var(--muted)">—</span>';
-  return fmt(v);
+function chipInv(v, thresholds, fmt_fn){ // lower = better
+  if(v==null||!isFinite(v)) return `<span class="n">—</span>`;
+  const[g,y]=thresholds;
+  let cls = v<=g?'g':v<=y?'y':'r';
+  return `<span class="chip ${cls}">${fmt_fn(v)}</span>`;
 }
 
-// ─── RENDER ──────────────────────────────────────────────────────────────
-const container = document.getElementById('main');
+// EXIT CTR: >=2% green, >=1% yellow
+const cExitCTR  = v=>chip(v,[2,1],fmtPct);
+// CONNECT: >=70% green, >=40% yellow
+const cConnect  = v=>chip(v,[70,40],v=>v.toFixed(0)+'%');
+// CPL: <=8 green, <=14 yellow (inverted)
+const cCPL      = v=>chipInv(v,[8,14],fmt);
+// CPlpv: <=3 green, <=6 yellow
+const cCPLPV    = v=>chipInv(v,[3,6],fmt);
+// 1s RET: >=90% green, >=75% yellow
+const c1sRet    = v=>chip(v,[90,75],fmtPct);
+// Hook RET: >=10% green, >=5% yellow
+const cHook     = v=>chip(v,[10,5],fmtPct);
+// Drop Rate: >=8% green, >=4% yellow
+const cDrop     = v=>chip(v,[8,4],fmtPct);
+// LPV plain
+const cLPV      = v=>v===0?`<span class="n">—</span>`:`<b>${v}</b>`;
+const cLeads    = v=>v===0?`<span class="n">—</span>`:`<b style="color:var(--green)">${v}</b>`;
+const cSpend    = v=>`<b>${fmt(v)}</b>`;
 
-ads.forEach(ad => {
-  // totals
-  const totSpend = ad.days.reduce((a,d)=>a+d.spend,0);
-  const totImp   = ad.days.reduce((a,d)=>a+d.imp,0);
-  const totOC    = ad.days.reduce((a,d)=>a+d.oc,0);
-  const totLPV   = ad.days.reduce((a,d)=>a+d.lpv,0);
-  const totLeads = ad.days.reduce((a,d)=>a+d.leads,0);
-  const totThru  = ad.days.reduce((a,d)=>a+d.thru,0);
-  const totVplay = ad.days.reduce((a,d)=>a+d.vplay,0);
-  const totV3s   = ad.days.reduce((a,d)=>a+d.v3s,0);
+function totals(ad){
+  return ad.days.reduce((a,d)=>({
+    spend:a.spend+d.spend, imp:a.imp+d.imp, oc:a.oc+d.oc,
+    lpv:a.lpv+d.lpv, leads:a.leads+d.leads,
+    thru:a.thru+d.thru, vplay:a.vplay+d.vplay, v3s:a.v3s+d.v3s
+  }),{spend:0,imp:0,oc:0,lpv:0,leads:0,thru:0,vplay:0,v3s:0});
+}
+
+// ═══ GLOBAL CHART ═══════════════════════════════════════════════════════
+// Aggregate all days across all ads
+const allDays = {};
+ADS.forEach(ad=>ad.days.forEach(d=>{
+  if(!allDays[d.d]) allDays[d.d]={spend:0,leads:0};
+  allDays[d.d].spend+=d.spend;
+  allDays[d.d].leads+=d.leads;
+}));
+const dayLabels = Object.keys(allDays).sort((a,b)=>{
+  const [da,ma]=a.split('/').map(Number);
+  const [db,mb]=b.split('/').map(Number);
+  return ma!==mb?ma-mb:da-db;
+});
+const daySpends = dayLabels.map(l=>allDays[l].spend);
+const dayLeads  = dayLabels.map(l=>allDays[l].leads);
+
+const gradP = ctx=>{const g=ctx.createLinearGradient(0,0,0,200);g.addColorStop(0,'rgba(168,85,247,0.4)');g.addColorStop(1,'rgba(168,85,247,0)');return g;};
+const gradG = ctx=>{const g=ctx.createLinearGradient(0,0,0,200);g.addColorStop(0,'rgba(16,185,129,0.4)');g.addColorStop(1,'rgba(16,185,129,0)');return g;};
+
+Chart.defaults.color='#64748b';
+Chart.defaults.font.family='Inter';
+
+new Chart(document.getElementById('mainChart'),{
+  type:'line',
+  data:{
+    labels:dayLabels,
+    datasets:[
+      {label:'Gasto (R$)',data:daySpends,yAxisID:'y',
+       borderColor:'#a855f7',backgroundColor:ctx=>gradP(ctx.chart.ctx),
+       borderWidth:2,fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:'#a855f7',pointBorderColor:'#0b0e1a',pointBorderWidth:2},
+      {label:'Leads',data:dayLeads,yAxisID:'y2',
+       borderColor:'#10b981',backgroundColor:ctx=>gradG(ctx.chart.ctx),
+       borderWidth:2,fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:'#10b981',pointBorderColor:'#0b0e1a',pointBorderWidth:2}
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#131728',borderColor:'rgba(255,255,255,0.08)',borderWidth:1,padding:12,cornerRadius:8}},
+    scales:{
+      x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{font:{size:10}}},
+      y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{font:{size:10},callback:v=>'R$'+v.toFixed(0)},position:'left'},
+      y2:{grid:{display:false},ticks:{font:{size:10}},position:'right'}
+    }
+  }
+});
+
+// DONUT
+new Chart(document.getElementById('donutChart'),{
+  type:'doughnut',
+  data:{
+    labels:ADS.map(a=>a.shortName),
+    datasets:[{
+      data:ADS.map(a=>totals(a).leads),
+      backgroundColor:['#7c3aed','#06b6d4','#f59e0b','#10b981'],
+      borderColor:'#131728',borderWidth:3,hoverOffset:6
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,cutout:'68%',
+    plugins:{legend:{position:'bottom',labels:{font:{size:9},boxWidth:8,padding:10,color:'#64748b'}},
+    tooltip:{backgroundColor:'#131728',borderColor:'rgba(255,255,255,0.08)',borderWidth:1,padding:12,cornerRadius:8}}
+  }
+});
+
+// CPL BAR
+new Chart(document.getElementById('cplChart'),{
+  type:'bar',
+  data:{
+    labels:ADS.map(a=>a.shortName),
+    datasets:[{
+      label:'CPL (R$)',
+      data:ADS.map(a=>{const t=totals(a);return t.leads>0?+(t.spend/t.leads).toFixed(2):0;}),
+      backgroundColor:['rgba(124,58,237,0.7)','rgba(245,158,11,0.7)','rgba(244,63,94,0.7)','rgba(16,185,129,0.7)'],
+      borderRadius:6,borderSkipped:false
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},
+    tooltip:{backgroundColor:'#131728',borderColor:'rgba(255,255,255,0.08)',borderWidth:1,padding:12,cornerRadius:8,callbacks:{label:ctx=>'R$ '+ctx.parsed.y.toFixed(2)}}},
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:9}}},
+      y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{font:{size:10},callback:v=>'R$'+v}}
+    }
+  }
+});
+
+// ═══ RENDER CREATIVE CARDS ══════════════════════════════════════════════
+const container = document.getElementById('creative-container');
+
+ADS.forEach(ad=>{
+  const t = totals(ad);
+  const exitCTRtot  = R(t.imp>0 ? t.oc/t.imp*100 : null);
+  const connectTot  = R(t.oc>0  ? t.lpv/t.oc*100 : null);
+  const cplTot      = R(t.leads>0 ? t.spend/t.leads : null);
+  const cpvTot      = R(t.lpv>0  ? t.spend/t.lpv  : null);
+  const ret1sTot    = R(t.imp>0  ? t.vplay/t.imp*100 : null);
+  const hookTot     = R(t.imp>0  ? t.thru/t.imp*100 : null);
+  const dropTot     = R(t.v3s>0  ? t.oc/t.v3s*100 : null);
 
   const previewUrl = `https://adsmanager.facebook.com/adsmanager/manage/ads?act=1664503901571256&selected_ad_ids=${ad.id}`;
 
-  const rows = ad.days.map(d => {
-    const exitCTR   = d.imp>0 ? d.oc/d.imp*100 : null;
-    const connect   = d.oc>0  ? d.lpv/d.oc*100 : null;
-    const cpl       = d.leads>0 ? d.spend/d.leads : null;
-    const cplpv     = d.lpv>0   ? d.spend/d.lpv : null;
-    const ret1s     = d.imp>0   ? d.vplay/d.imp*100 : null;
-    const hookRet   = d.imp>0   ? d.thru/d.imp*100 : null;
-    const dropRate  = d.v3s>0   ? d.oc/d.v3s*100 : null;
-
+  // ─── Day rows ────────────────────────────────────
+  const rows = ad.days.map(d=>{
+    const exitCTR = R(d.imp>0 ? d.oc/d.imp*100 : null);
+    const connect = R(d.oc>0  ? d.lpv/d.oc*100 : null);
+    const cpl     = R(d.leads>0 ? d.spend/d.leads : null);
+    const cpv     = R(d.lpv>0   ? d.spend/d.lpv : null);
+    const ret1s   = R(d.imp>0   ? d.vplay/d.imp*100 : null);
+    const hook    = R(d.imp>0   ? d.thru/d.imp*100 : null);
+    const drop    = R(d.v3s>0   ? d.oc/d.v3s*100 : null);
     return `<tr>
-      <td>${d.d}</td>
-      <td>${chipExitCTR(exitCTR)}</td>
-      <td>${plain(d.lpv, v=>`<b>${v}</b>`)}</td>
-      <td>${chipCPLPV(cplpv)}</td>
-      <td>${chipConnect(connect)}</td>
-      <td>€${d.spend.toFixed(2)}</td>
-      <td>${plain(d.leads, v=>`<b style="color:var(--green)">${v}</b>`)}</td>
-      <td>${chipCPL(cpl)}</td>
-      <td><span style="color:var(--muted)">—</span></td>
-      <td><span style="color:var(--muted)">—</span></td>
-      <td><span style="color:var(--muted)">—</span></td>
-      <td>${chip1sRet(ret1s)}</td>
-      <td>${chipHook(hookRet)}</td>
-      <td>${chipDrop(dropRate)}</td>
+      <td><b>${d.d}</b></td>
+      <td>${cExitCTR(exitCTR)}</td>
+      <td>${cLPV(d.lpv)}</td>
+      <td>${cCPLPV(cpv)}</td>
+      <td>${cConnect(connect)}</td>
+      <td>${cSpend(d.spend)}</td>
+      <td>${cLeads(d.leads)}</td>
+      <td>${cCPL(cpl)}</td>
+      <td><span class="n">—</span></td>
+      <td><span class="n">—</span></td>
+      <td><span class="n">—</span></td>
+      <td>${c1sRet(ret1s)}</td>
+      <td>${cHook(hook)}</td>
+      <td>${cDrop(drop)}</td>
     </tr>`;
   }).join('');
 
-  // total row metrics
-  const tExitCTR  = totImp>0 ? totOC/totImp*100 : null;
-  const tConnect  = totOC>0  ? totLPV/totOC*100 : null;
-  const tCPL      = totLeads>0 ? totSpend/totLeads : null;
-  const tCPLPV    = totLPV>0 ? totSpend/totLPV : null;
-  const tRet1s    = totImp>0 ? totVplay/totImp*100 : null;
-  const tHook     = totImp>0 ? totThru/totImp*100 : null;
-  const tDrop     = totV3s>0 ? totOC/totV3s*100 : null;
+  // ─── Sparkline data ──────────────────────────────
+  const sparkId = `spark-${ad.id}`;
 
   const html = `
-  <div class="ad-card">
-    <div class="ad-header">
-      <img class="ad-thumb" src="${ad.thumb}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
-      <div class="ad-thumb-placeholder" style="display:none">🎬</div>
-      <div class="ad-info">
-        <div class="ad-name">${ad.name}</div>
-        <div class="ad-adset">${ad.adset}</div>
+  <div class="creative-card" id="ad-${ad.id}">
+    <!-- HEADER -->
+    <div class="creative-header">
+      <img class="creative-thumb" src="${ad.thumb}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2256%22 height=%2256%22><rect width=%2256%22 height=%2256%22 fill=%22%23171c30%22 rx=%228%22/><text x=%2250%25%22 y=%2255%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2220%22 fill=%22%23475569%22>🎬</text></svg>'"/>
+      <div class="creative-info">
+        <div class="creative-name">${ad.name} <span class="sb-badge badge-${ad.badgeClass}" style="font-size:9px;padding:2px 8px;border-radius:4px;margin-left:6px">${ad.badge}</span></div>
+        <div class="creative-adset">${ad.adset}</div>
       </div>
-      <div class="ad-meta">
-        <span class="ad-status">ACTIVE</span>
-        <a class="preview-btn" href="${previewUrl}" target="_blank">↗ PREVIEW</a>
+      <div class="creative-header-stats">
+        <div class="ch-stat">
+          <div class="ch-stat-val" style="color:var(--green)">${t.leads}</div>
+          <div class="ch-stat-lbl">Leads</div>
+        </div>
+        <div class="ch-stat">
+          <div class="ch-stat-val">${cplTot!=null?'R$'+cplTot.toFixed(2).replace('.',','):'—'}</div>
+          <div class="ch-stat-lbl">CPL</div>
+        </div>
+        <div class="ch-stat">
+          <div class="ch-stat-val" style="color:var(--p2)">R$${t.spend.toFixed(2).replace('.',',')}</div>
+          <div class="ch-stat-lbl">Investido</div>
+        </div>
+      </div>
+      <a class="preview-link" href="${previewUrl}" target="_blank">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Ads Manager
+      </a>
+    </div>
+
+    <!-- MINI KPIS -->
+    <div class="creative-kpis">
+      <div class="ck"><div class="ck-lbl">Exit CTR</div><div class="ck-val">${exitCTRtot!=null?exitCTRtot.toFixed(2)+'%':'—'}</div></div>
+      <div class="ck"><div class="ck-lbl">LPV</div><div class="ck-val">${t.lpv}</div></div>
+      <div class="ck"><div class="ck-lbl">Custo/LPV</div><div class="ck-val">${cpvTot!=null?'R$'+cpvTot.toFixed(2).replace('.',','):'—'}</div></div>
+      <div class="ck"><div class="ck-lbl">Connect Rate</div><div class="ck-val">${connectTot!=null?connectTot.toFixed(0)+'%':'—'}</div></div>
+      <div class="ck"><div class="ck-lbl">Impressões</div><div class="ck-val">${t.imp.toLocaleString('pt-BR')}</div></div>
+      <div class="ck"><div class="ck-lbl">IG Visitas</div><div class="ck-val" style="color:var(--muted)">—</div></div>
+      <div class="ck"><div class="ck-lbl">Seguidores</div><div class="ck-val" style="color:var(--muted)">—</div></div>
+    </div>
+
+    <!-- VIDEO METRICS -->
+    <div class="video-bar">
+      <div class="vb">
+        <div class="vb-lbl">1s Retenção · "Parou de rolar?"</div>
+        <div class="vb-val">${ret1sTot!=null?ret1sTot.toFixed(1)+'%':'—'}</div>
+        <div class="vb-desc">Reproduções ÷ Impressões</div>
+      </div>
+      <div class="vb">
+        <div class="vb-lbl">Retenção pós Hook · "Passou do gancho?"</div>
+        <div class="vb-val">${hookTot!=null?hookTot.toFixed(1)+'%':'—'}</div>
+        <div class="vb-desc">ThruPlays ÷ Impressões</div>
+      </div>
+      <div class="vb">
+        <div class="vb-lbl">Drop Rate · "Quem viu, clicou?"</div>
+        <div class="vb-val">${dropTot!=null?dropTot.toFixed(1)+'%':'—'}</div>
+        <div class="vb-desc">Cliques no link ÷ Views 3s</div>
       </div>
     </div>
 
-    <!-- TOTAL SUMMARY -->
-    <div class="ad-totals">
-      <div class="total-cell">
-        <div class="total-label">Investido</div>
-        <div class="total-val" style="color:var(--blue)">€${totSpend.toFixed(2)}</div>
+    <!-- CHART -->
+    <div class="creative-chart">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-size:12px;font-weight:600;color:var(--muted2)">Evolução Diária</div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--p2)"></div>Gasto</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Leads</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--t1)"></div>LPV</div>
+        </div>
       </div>
-      <div class="total-cell">
-        <div class="total-label">Leads</div>
-        <div class="total-val" style="color:var(--green)">${totLeads}</div>
-      </div>
-      <div class="total-cell">
-        <div class="total-label">CPL</div>
-        <div class="total-val">${tCPL ? '€'+tCPL.toFixed(2) : '—'}</div>
-      </div>
-      <div class="total-cell">
-        <div class="total-label">Exit CTR</div>
-        <div class="total-val">${tExitCTR ? tExitCTR.toFixed(2)+'%' : '—'}</div>
-      </div>
-      <div class="total-cell">
-        <div class="total-label">Connect Rate</div>
-        <div class="total-val">${tConnect ? tConnect.toFixed(0)+'%' : '—'}</div>
-      </div>
+      <div style="height:130px"><canvas id="${sparkId}"></canvas></div>
     </div>
 
-    <div class="table-wrap">
+    <!-- TABLE -->
+    <div class="day-table-wrap">
       <table>
         <thead>
           <tr>
-            <th>DATA</th>
-            <!-- FUNNEL -->
-            <th title="Outbound Clicks ÷ Impressões">EXIT CTR</th>
-            <th>LPV</th>
-            <th>CPL/PV</th>
-            <th title="LPV ÷ Outbound Clicks">CONNECT %</th>
-            <th>INVESTIDO</th>
-            <th>LEADS</th>
-            <th>CPL</th>
-            <!-- IG -->
-            <th title="Não disponível via API">IG VISITS</th>
-            <th title="Não disponível via API">SEGUID.</th>
-            <th title="Não disponível via API">CPF</th>
-            <!-- VIDEO -->
-            <th title="VideoPlays ÷ Impressões · Parando de rolar?">1S RET.</th>
-            <th title="ThruPlays ÷ Impressões · Passou do hook?">HOOK RET.</th>
-            <th title="Cliques ÷ Views 3s · Quem viu, clicou?">DROP RATE</th>
+            <th rowspan="2" style="text-align:left">DIA</th>
+            <th colspan="4" class="group-th">─── FUNIL ───</th>
+            <th colspan="3" class="group-th">─── CONVERSÃO ───</th>
+            <th colspan="3" class="group-th">─── INSTAGRAM ───</th>
+            <th colspan="3" class="group-th">─── MÉTRICAS DE VÍDEO ───</th>
           </tr>
-        </thead>
-        <thead>
           <tr>
-            <th></th>
-            <th colspan="4" style="text-align:center;color:rgba(79,110,247,0.5);font-size:7px;border-left:1px solid var(--border2)">─── FUNIL ───</th>
-            <th colspan="3" style="text-align:center;color:rgba(0,216,125,0.4);font-size:7px;border-left:1px solid var(--border2)">─── CONVERSÃO ───</th>
-            <th colspan="3" style="text-align:center;color:rgba(56,189,248,0.4);font-size:7px;border-left:1px solid var(--border2)">─── INSTAGRAM ───</th>
-            <th colspan="3" style="text-align:center;color:rgba(124,58,237,0.4);font-size:7px;border-left:1px solid var(--border2)">─── VÍDEO ───</th>
+            <th>EXIT CTR</th><th>LPV</th><th>CUSTO/LPV</th><th>CONNECT%</th>
+            <th>INVESTIDO</th><th>LEADS</th><th>CPL</th>
+            <th>IG VISITS</th><th>SEGUID.</th><th>CPF</th>
+            <th title="VideoPlays÷Impressões">1S RET.</th>
+            <th title="ThruPlays÷Impressões">HOOK RET.</th>
+            <th title="Cliques÷Views3s">DROP RATE</th>
           </tr>
         </thead>
         <tbody>
           ${rows}
-          <tr style="background:var(--s3);font-weight:600;border-top:1px solid var(--border2)">
-            <td style="color:var(--text);font-size:9px;letter-spacing:1px;text-transform:uppercase">TOTAL</td>
-            <td>${chipExitCTR(tExitCTR)}</td>
-            <td><b>${totLPV}</b></td>
-            <td>${chipCPLPV(tCPLPV)}</td>
-            <td>${chipConnect(tConnect)}</td>
-            <td style="color:var(--blue)">€${totSpend.toFixed(2)}</td>
-            <td style="color:var(--green)"><b>${totLeads}</b></td>
-            <td>${chipCPL(tCPL)}</td>
-            <td><span style="color:var(--muted)">—</span></td>
-            <td><span style="color:var(--muted)">—</span></td>
-            <td><span style="color:var(--muted)">—</span></td>
-            <td>${chip1sRet(tRet1s)}</td>
-            <td>${chipHook(tHook)}</td>
-            <td>${chipDrop(tDrop)}</td>
+          <tr class="total-row">
+            <td>TOTAL</td>
+            <td>${cExitCTR(exitCTRtot)}</td>
+            <td><b>${t.lpv}</b></td>
+            <td>${cCPLPV(cpvTot)}</td>
+            <td>${cConnect(connectTot)}</td>
+            <td><b style="color:var(--p2)">R$${t.spend.toFixed(2).replace('.',',')}</b></td>
+            <td><b style="color:var(--green)">${t.leads}</b></td>
+            <td>${cCPL(cplTot)}</td>
+            <td><span class="n">—</span></td><td><span class="n">—</span></td><td><span class="n">—</span></td>
+            <td>${c1sRet(ret1sTot)}</td>
+            <td>${cHook(hookTot)}</td>
+            <td>${cDrop(dropTot)}</td>
           </tr>
         </tbody>
       </table>
     </div>
-
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>GOOD</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>WATCH</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>OPTIMIZE</div>
-      <div style="margin-left:auto;font-size:8px;color:var(--muted);font-family:var(--mono)">
-        EXIT CTR: &gt;2% ✓ · CONNECT: &gt;70% ✓ · CPL: &lt;€8 ✓ · 1S RET: &gt;90% ✓ · HOOK: &gt;10% ✓ · DROP: &gt;8% ✓
-      </div>
-    </div>
   </div>`;
 
   container.insertAdjacentHTML('beforeend', html);
+
+  // Sparkline chart
+  new Chart(document.getElementById(sparkId),{
+    type:'line',
+    data:{
+      labels:ad.days.map(d=>d.d),
+      datasets:[
+        {label:'Gasto',data:ad.days.map(d=>d.spend),yAxisID:'y',
+         borderColor:'#a855f7',backgroundColor:'rgba(168,85,247,0.1)',
+         borderWidth:1.5,fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#a855f7',pointBorderColor:'#131728',pointBorderWidth:1.5},
+        {label:'Leads',data:ad.days.map(d=>d.leads),yAxisID:'y2',
+         borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.08)',
+         borderWidth:1.5,fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#10b981',pointBorderColor:'#131728',pointBorderWidth:1.5},
+        {label:'LPV',data:ad.days.map(d=>d.lpv),yAxisID:'y2',
+         borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,0)',
+         borderWidth:1.5,fill:false,tension:0.4,pointRadius:3,pointBackgroundColor:'#06b6d4',pointBorderColor:'#131728',pointBorderWidth:1.5,borderDash:[4,3]},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#0e1120',borderColor:'rgba(255,255,255,0.08)',borderWidth:1,padding:10,cornerRadius:8,callbacks:{label:ctx=>ctx.dataset.label+': '+(ctx.dataset.yAxisID==='y'?'R$'+ctx.parsed.y.toFixed(2):ctx.parsed.y)}}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{font:{size:9}}},
+        y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{font:{size:9},callback:v=>'R$'+v.toFixed(0)},position:'left'},
+        y2:{grid:{display:false},ticks:{font:{size:9},stepSize:1},position:'right'}
+      }
+    }
+  });
 });
+
+// ─── Sidebar scroll ──────────────────────────────
+function scrollToAd(id){
+  const el=document.getElementById(id);
+  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+}
 </script>
-
-<div id="main"></div>
-
-<div class="footer">
-  PONTUS FINANCE · ACT_1664503901571256 · CAMPANHA: ABO – LEAD PONTUS – ADD TO CART – BT01 · META GRAPH API v19 · GERADO EM 06 ABR 2026<br>
-  ⚠ IG VISITS / SEGUIDORES / CPF não estão disponíveis via Marketing API — consultar o Instagram Insights manualmente
-</div>
-
 </body>
 </html>
