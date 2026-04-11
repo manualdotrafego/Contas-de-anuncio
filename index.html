@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>NBP · Performance Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#070710;
+  --s1:#0d0d1a;
+  --s2:#111124;
+  --s3:#16162e;
+  --border:#1c1c38;
+  --border2:#252545;
+  --accent:#4f6ef7;
+  --accent2:#7c3aed;
+  --green:#00d87d;
+  --green-dim:rgba(0,216,125,0.1);
+  --yellow:#f5c542;
+  --yellow-dim:rgba(245,197,66,0.1);
+  --red:#f84960;
+  --red-dim:rgba(248,73,96,0.1);
+  --blue:#38bdf8;
+  --text:#e2e8f0;
+  --muted:#4a5080;
+  --mono:'IBM Plex Mono',monospace;
+  --sans:'Inter',sans-serif;
+}
+
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;padding:28px 32px;}
+
+/* ─── HEADER ─── */
+.header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.header-left{}
+.logo{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.title{font-size:22px;font-weight:700;letter-spacing:-0.5px}
+.subtitle{font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+.header-right{display:flex;gap:12px;align-items:center}
+.live-badge{display:flex;align-items:center;gap:6px;background:rgba(0,216,125,0.1);border:1px solid rgba(0,216,125,0.25);color:var(--green);font-size:10px;font-weight:600;padding:5px 12px;border-radius:4px;font-family:var(--mono);letter-spacing:1px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.date-badge{background:var(--s2);border:1px solid var(--border);color:var(--muted);font-size:10px;font-family:var(--mono);padding:5px 12px;border-radius:4px;letter-spacing:0.5px}
+
+/* ─── KPI STRIP ─── */
+.kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:28px}
+.kpi{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:16px 18px;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0.5}
+.kpi-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-family:var(--mono);margin-bottom:8px}
+.kpi-val{font-size:22px;font-weight:700;font-family:var(--mono);letter-spacing:-1px}
+.kpi-sub{font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+
+/* ─── AD CARD ─── */
+.ad-card{background:var(--s1);border:1px solid var(--border);border-radius:10px;margin-bottom:20px;overflow:hidden}
+.ad-header{display:flex;align-items:center;gap:16px;padding:18px 22px;border-bottom:1px solid var(--border);background:var(--s2)}
+.ad-thumb{width:52px;height:52px;border-radius:6px;object-fit:cover;border:1px solid var(--border2);flex-shrink:0;background:var(--s3)}
+.ad-thumb-placeholder{width:52px;height:52px;border-radius:6px;background:var(--s3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.ad-info{flex:1;min-width:0}
+.ad-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.ad-adset{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.ad-meta{display:flex;gap:8px;align-items:center;margin-left:auto;flex-shrink:0}
+.preview-btn{display:flex;align-items:center;gap:5px;background:rgba(79,110,247,0.1);border:1px solid rgba(79,110,247,0.3);color:var(--accent);font-size:10px;font-family:var(--mono);padding:5px 12px;border-radius:4px;text-decoration:none;transition:all 0.2s;letter-spacing:0.5px}
+.preview-btn:hover{background:rgba(79,110,247,0.2)}
+.ad-status{font-size:9px;font-family:var(--mono);padding:3px 8px;border-radius:3px;background:var(--green-dim);color:var(--green);border:1px solid rgba(0,216,125,0.2);letter-spacing:1px}
+
+/* ─── TOTALS ROW ─── */
+.ad-totals{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border-top:1px solid var(--border)}
+.total-cell{background:var(--s1);padding:12px 16px}
+.total-label{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:4px}
+.total-val{font-size:14px;font-weight:600;font-family:var(--mono)}
+
+/* ─── TABLE ─── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:11px}
+thead th{
+  background:var(--s3);
+  color:var(--muted);
+  font-size:8px;
+  font-family:var(--mono);
+  text-transform:uppercase;
+  letter-spacing:1px;
+  padding:10px 14px;
+  text-align:right;
+  border-bottom:1px solid var(--border);
+  white-space:nowrap;
+  font-weight:500;
+}
+thead th:first-child{text-align:left}
+tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s}
+tbody tr:hover{background:rgba(255,255,255,0.02)}
+tbody tr:last-child{border-bottom:none}
+tbody td{padding:10px 14px;text-align:right;font-family:var(--mono);font-size:11px;white-space:nowrap}
+tbody td:first-child{text-align:left;font-size:10px;color:var(--muted)}
+
+/* ─── SECTION DIVIDER ─── */
+.section-label{font-size:7px;color:var(--border2);font-family:var(--mono);letter-spacing:2px;text-transform:uppercase;padding:6px 14px;background:var(--bg);border-bottom:1px solid var(--border);border-top:1px solid var(--border)}
+
+/* ─── METRIC CHIP ─── */
+.chip{display:inline-block;padding:2px 7px;border-radius:3px;font-size:10px;font-family:var(--mono);font-weight:500}
+.chip-g{background:var(--green-dim);color:var(--green);border:1px solid rgba(0,216,125,0.2)}
+.chip-y{background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(245,197,66,0.2)}
+.chip-r{background:var(--red-dim);color:var(--red);border:1px solid rgba(248,73,96,0.2)}
+.chip-n{background:var(--s3);color:var(--muted);border:1px solid var(--border)}
+
+/* ─── LEGEND ─── */
+.legend{display:flex;gap:20px;align-items:center;padding:14px 22px;border-top:1px solid var(--border);background:var(--bg)}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:9px;color:var(--muted);font-family:var(--mono)}
+.legend-dot{width:6px;height:6px;border-radius:2px}
+
+/* ─── FOOTER ─── */
+.footer{text-align:center;font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:28px;padding-top:16px;border-top:1px solid var(--border);letter-spacing:0.5px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo">NBP · Pontus Finance</div>
+    <div class="title">Campaign Intelligence Report</div>
+    <div class="subtitle">ABO · LEAD PONTUS · ACT_1664503901571256</div>
+  </div>
+  <div class="header-right">
+    <div class="date-badge">28 MAR – 06 ABR 2026</div>
+    <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+  </div>
+</div>
+
+<!-- KPI STRIP -->
+<div class="kpi-strip">
+  <div class="kpi">
+    <div class="kpi-label">Investimento</div>
+    <div class="kpi-val" style="color:var(--blue)">€374,61</div>
+    <div class="kpi-sub">10 dias ativos</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Leads</div>
+    <div class="kpi-val" style="color:var(--green)">43</div>
+    <div class="kpi-sub">4 criativos ativos</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">CPL Médio</div>
+    <div class="kpi-val" style="color:var(--yellow)">€8,71</div>
+    <div class="kpi-sub">Best: €6,19</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">LPV Total</div>
+    <div class="kpi-val">446</div>
+    <div class="kpi-sub">Connect Rate: 67%</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Impressões</div>
+    <div class="kpi-val">14.062</div>
+    <div class="kpi-sub">Alcance estimado</div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────
+const ads = [
+  {
+    id:"6897272042554",
+    name:"CRIATIVO NATIVO · POST 01/04 (v1)",
+    adset:"AD SET 1.3 · CRIATIVO NATIVO 2",
+    thumb:"https://scontent.fbnu5-1.fna.fbcdn.net/v/t15.5256-10/661169855_1655733072140064_5908846331102137081_n.jpg?_nc_cat=110&ccb=1-7&_nc_ohc=bPFdQGJodZYQ7kNvwECcDrH&_nc_oc=Adq7S7nxYSRMfDxGFYVDhdQAosE3uOyXTN1eonNL858ZBepm5MuKhR6fSa3R5U9tEo3wDUfrHPRE-Uec4Go5pCNW&_nc_zt=23&_nc_ht=scontent.fbnu5-1.fna&edm=AOgd6ZUEAAAA&oh=00_Af219tNkKV1xKUGLsbRMsraUoCjpNe3X0pYDIPfcPOYYDg&oe=69E018FF",
+    days:[
+      {d:"01/04",spend:12.08,imp:737,oc:39,lpv:28,leads:0,thru:102,vplay:709,v3s:286},
+      {d:"02/04",spend:33.14,imp:1864,oc:87,lpv:71,leads:4,thru:252,vplay:1801,v3s:667},
+      {d:"03/04",spend:31.42,imp:1693,oc:94,lpv:86,leads:9,thru:239,vplay:1647,v3s:678},
+      {d:"04/04",spend:21.57,imp:1342,oc:51,lpv:46,leads:3,thru:153,vplay:1294,v3s:460},
+      {d:"06/04",spend:19.40,imp:1206,oc:34,lpv:28,leads:3,thru:118,vplay:1183,v3s:409},
+    ]
+  },
+  {
+    id:"6896512221354",
+    name:"CRIATIVO NATIVO · VENDA",
+    adset:"AD SET 1.2 · CRIATIVO NATIVO",
+    thumb:"https://scontent.fbnu5-1.fna.fbcdn.net/v/t15.5256-10/659785304_963616872826725_4981432250761069541_n.jpg?_nc_cat=109&ccb=1-7&_nc_ohc=ON5Vfh3bmZ0Q7kNvwG72LYX&_nc_oc=AdpzXQxjKiBmYLdSaBx2jxIX2mW3mxSDx2zCyxAbIf042FrpffWaEJJDUppod8ITuwSLUmqEstv20dItqP2p7dbc&_nc_zt=23&_nc_ht=scontent.fbnu5-1.fna&edm=AOgd6ZUEAAAA&oh=00_Af25-WCF4yBESYQEhKA5wjxZPEGEe10CinMzGB9XehOblA&oe=69E016FB",
+    days:[
+      {d:"31/03",spend:25.35,imp:1255,oc:31,lpv:33,leads:5,thru:160,vplay:1211,v3s:333},
+      {d:"01/04",spend:36.17,imp:2304,oc:37,lpv:28,leads:4,thru:256,vplay:2216,v3s:563},
+      {d:"02/04",spend:32.44,imp:2044,oc:29,lpv:22,leads:3,thru:195,vplay:1964,v3s:481},
+      {d:"03/04",spend:24.98,imp:1482,oc:26,lpv:22,leads:4,thru:157,vplay:1440,v3s:375},
+      {d:"04/04",spend:20.12,imp:1037,oc:19,lpv:16,leads:0,thru:106,vplay:996,v3s:262},
+      {d:"06/04",spend:3.20, imp:202, oc:2, lpv:2, leads:0,thru:9,  vplay:197, v3s:46},
+    ]
+  },
+  {
+    id:"6897689079354",
+    name:"CRIATIVO NATIVO · POST 01/04 (v2)",
+    adset:"AD SET 1.4 · CRIATIVO NATIVO 3 · POST 02/04",
+    thumb:"https://scontent.fbnu5-1.fna.fbcdn.net/v/t15.5256-10/667868105_945780698237224_8213436685143829287_n.jpg?_nc_cat=104&ccb=1-7&_nc_ohc=NvdW77BNCc8Q7kNvwEtK8JP&_nc_oc=Adoa-BFKZTBNZ3ePTQOz-e9e7ueMr_g6BINecQnc6DidflQJzdCGYMhPddCj2WjRqVVR6MeXKoMxjbts2hGJnHsl&_nc_zt=23&_nc_ht=scontent.fbnu5-1.fna&edm=AOgd6ZUEAAAA&oh=00_Af2zy32JPlyMFlQk-pwXWbRDrb5m7QDjj-4KF9_egDYNCg&oe=69E01904",
+    days:[
+      {d:"02/04",spend:22.03,imp:1372,oc:19,lpv:13,leads:1,thru:103,vplay:1305,v3s:235},
+      {d:"03/04",spend:24.98,imp:1451,oc:14,lpv:14,leads:2,thru:119,vplay:1372,v3s:256},
+      {d:"04/04",spend:19.94,imp:981, oc:16,lpv:13,leads:0,thru:72, vplay:941, v3s:179},
+      {d:"06/04",spend:3.72, imp:175, oc:1, lpv:1, leads:1,thru:8,  vplay:169, v3s:29},
+    ]
+  },
+  {
+    id:"6896489872154",
+    name:"CRIATIVO 3",
+    adset:"AD SET 1.1 · TESTE",
+    thumb:"https://scontent.fbnu5-1.fna.fbcdn.net/v/t15.5256-10/659836534_1641937193796249_2316537676487209507_n.jpg?_nc_cat=109&ccb=1-7&_nc_ohc=T3FABTjOv10Q7kNvwHn5k8B&_nc_oc=AdohNnzaz3Bd4EAdbcUA2e9g_tAl4HQe-GBh5wSYGMAba5NXNgQyDqaG0ypkwwYSZn0D0JzS3SjurEHOw1J-y8IW&_nc_zt=23&_nc_ht=scontent.fbnu5-1.fna&edm=AOgd6ZUEAAAA&oh=00_Af0tjg7WudHCxgNv5Xu_Fh1JPzaKllKYC3-Jb3ekJv6pxQ&oe=69E00DA1",
+    days:[
+      {d:"31/03",spend:33.13,imp:1411,oc:16,lpv:13,leads:3,thru:93, vplay:1302,v3s:267},
+      {d:"01/04",spend:10.58,imp:506, oc:10,lpv:10,leads:1,thru:38, vplay:473, v3s:82},
+    ]
+  }
+];
+
+// ─── CHIP HELPERS ────────────────────────────────────────────────────────
+function chipExitCTR(v){
+  if(v===null||isNaN(v))return'<span class="chip chip-n">—</span>';
+  let cl=v>=2?"chip-g":v>=1?"chip-y":"chip-r";
+  return`<span class="chip ${cl}">${v.toFixed(2)}%</span>`;
+}
+function chipConnect(v){
+  if(!v||isNaN(v))return'<span class="chip chip-n">—</span>';
+  let cl=v>=70?"chip-g":v>=40?"chip-y":"chip-r";
+  return`<span class="chip ${cl}">${v.toFixed(0)}%</span>`;
+}
+function chipCPL(v){
+  if(!v||isNaN(v)||!isFinite(v))return'<span class="chip chip-n">—</span>';
+  let cl=v<=8?"chip-g":v<=14?"chip-y":"chip-r";
+  return`<span class="chip ${cl}">€${v.toFixed(2)}</span>`;
+}
+function chipCPLPV(v){
+  if(!v||isNaN(v)||!isFinite(v))return'<span class="chip chip-n">—</span>';
+  let cl=v<=3?"chip-g":v<=6?"chip-y":"chip-r";
+  return`<span class="chip ${cl}">€${v.toFixed(2)}</span>`;
+}
+function chip1sRet(v){
+  if(v===null||isNaN(v))return'<span class="chip chip-n">—</span>';
+  let cl=v>=90?"chip-g":v>=75?"chip-y":"chip-r";
+  return`<span class="chip ${cl}">${v.toFixed(1)}%</span>`;
+}
+function chipHook(v){
+  if(v===null||isNaN(v))return'<span class="chip chip-n">—</span>';
+  let cl=v>=10?"chip-g":v>=5?"chip-y":"chip-r";
+  return`<span class="chip ${cl}">${v.toFixed(1)}%</span>`;
+}
+function chipDrop(v){
+  if(v===null||isNaN(v))return'<span class="chip chip-n">—</span>';
+  let cl=v>=8?"chip-g":v>=4?"chip-y":"chip-r";
+  return`<span class="chip ${cl}">${v.toFixed(1)}%</span>`;
+}
+function plain(v,fmt){
+  if(v===0||v===null||isNaN(v))return'<span style="color:var(--muted)">—</span>';
+  return fmt(v);
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────
+const container = document.getElementById('main');
+
+ads.forEach(ad => {
+  // totals
+  const totSpend = ad.days.reduce((a,d)=>a+d.spend,0);
+  const totImp   = ad.days.reduce((a,d)=>a+d.imp,0);
+  const totOC    = ad.days.reduce((a,d)=>a+d.oc,0);
+  const totLPV   = ad.days.reduce((a,d)=>a+d.lpv,0);
+  const totLeads = ad.days.reduce((a,d)=>a+d.leads,0);
+  const totThru  = ad.days.reduce((a,d)=>a+d.thru,0);
+  const totVplay = ad.days.reduce((a,d)=>a+d.vplay,0);
+  const totV3s   = ad.days.reduce((a,d)=>a+d.v3s,0);
+
+  const previewUrl = `https://adsmanager.facebook.com/adsmanager/manage/ads?act=1664503901571256&selected_ad_ids=${ad.id}`;
+
+  const rows = ad.days.map(d => {
+    const exitCTR   = d.imp>0 ? d.oc/d.imp*100 : null;
+    const connect   = d.oc>0  ? d.lpv/d.oc*100 : null;
+    const cpl       = d.leads>0 ? d.spend/d.leads : null;
+    const cplpv     = d.lpv>0   ? d.spend/d.lpv : null;
+    const ret1s     = d.imp>0   ? d.vplay/d.imp*100 : null;
+    const hookRet   = d.imp>0   ? d.thru/d.imp*100 : null;
+    const dropRate  = d.v3s>0   ? d.oc/d.v3s*100 : null;
+
+    return `<tr>
+      <td>${d.d}</td>
+      <td>${chipExitCTR(exitCTR)}</td>
+      <td>${plain(d.lpv, v=>`<b>${v}</b>`)}</td>
+      <td>${chipCPLPV(cplpv)}</td>
+      <td>${chipConnect(connect)}</td>
+      <td>€${d.spend.toFixed(2)}</td>
+      <td>${plain(d.leads, v=>`<b style="color:var(--green)">${v}</b>`)}</td>
+      <td>${chipCPL(cpl)}</td>
+      <td><span style="color:var(--muted)">—</span></td>
+      <td><span style="color:var(--muted)">—</span></td>
+      <td><span style="color:var(--muted)">—</span></td>
+      <td>${chip1sRet(ret1s)}</td>
+      <td>${chipHook(hookRet)}</td>
+      <td>${chipDrop(dropRate)}</td>
+    </tr>`;
+  }).join('');
+
+  // total row metrics
+  const tExitCTR  = totImp>0 ? totOC/totImp*100 : null;
+  const tConnect  = totOC>0  ? totLPV/totOC*100 : null;
+  const tCPL      = totLeads>0 ? totSpend/totLeads : null;
+  const tCPLPV    = totLPV>0 ? totSpend/totLPV : null;
+  const tRet1s    = totImp>0 ? totVplay/totImp*100 : null;
+  const tHook     = totImp>0 ? totThru/totImp*100 : null;
+  const tDrop     = totV3s>0 ? totOC/totV3s*100 : null;
+
+  const html = `
+  <div class="ad-card">
+    <div class="ad-header">
+      <img class="ad-thumb" src="${ad.thumb}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+      <div class="ad-thumb-placeholder" style="display:none">🎬</div>
+      <div class="ad-info">
+        <div class="ad-name">${ad.name}</div>
+        <div class="ad-adset">${ad.adset}</div>
+      </div>
+      <div class="ad-meta">
+        <span class="ad-status">ACTIVE</span>
+        <a class="preview-btn" href="${previewUrl}" target="_blank">↗ PREVIEW</a>
+      </div>
+    </div>
+
+    <!-- TOTAL SUMMARY -->
+    <div class="ad-totals">
+      <div class="total-cell">
+        <div class="total-label">Investido</div>
+        <div class="total-val" style="color:var(--blue)">€${totSpend.toFixed(2)}</div>
+      </div>
+      <div class="total-cell">
+        <div class="total-label">Leads</div>
+        <div class="total-val" style="color:var(--green)">${totLeads}</div>
+      </div>
+      <div class="total-cell">
+        <div class="total-label">CPL</div>
+        <div class="total-val">${tCPL ? '€'+tCPL.toFixed(2) : '—'}</div>
+      </div>
+      <div class="total-cell">
+        <div class="total-label">Exit CTR</div>
+        <div class="total-val">${tExitCTR ? tExitCTR.toFixed(2)+'%' : '—'}</div>
+      </div>
+      <div class="total-cell">
+        <div class="total-label">Connect Rate</div>
+        <div class="total-val">${tConnect ? tConnect.toFixed(0)+'%' : '—'}</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>DATA</th>
+            <!-- FUNNEL -->
+            <th title="Outbound Clicks ÷ Impressões">EXIT CTR</th>
+            <th>LPV</th>
+            <th>CPL/PV</th>
+            <th title="LPV ÷ Outbound Clicks">CONNECT %</th>
+            <th>INVESTIDO</th>
+            <th>LEADS</th>
+            <th>CPL</th>
+            <!-- IG -->
+            <th title="Não disponível via API">IG VISITS</th>
+            <th title="Não disponível via API">SEGUID.</th>
+            <th title="Não disponível via API">CPF</th>
+            <!-- VIDEO -->
+            <th title="VideoPlays ÷ Impressões · Parando de rolar?">1S RET.</th>
+            <th title="ThruPlays ÷ Impressões · Passou do hook?">HOOK RET.</th>
+            <th title="Cliques ÷ Views 3s · Quem viu, clicou?">DROP RATE</th>
+          </tr>
+        </thead>
+        <thead>
+          <tr>
+            <th></th>
+            <th colspan="4" style="text-align:center;color:rgba(79,110,247,0.5);font-size:7px;border-left:1px solid var(--border2)">─── FUNIL ───</th>
+            <th colspan="3" style="text-align:center;color:rgba(0,216,125,0.4);font-size:7px;border-left:1px solid var(--border2)">─── CONVERSÃO ───</th>
+            <th colspan="3" style="text-align:center;color:rgba(56,189,248,0.4);font-size:7px;border-left:1px solid var(--border2)">─── INSTAGRAM ───</th>
+            <th colspan="3" style="text-align:center;color:rgba(124,58,237,0.4);font-size:7px;border-left:1px solid var(--border2)">─── VÍDEO ───</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+          <tr style="background:var(--s3);font-weight:600;border-top:1px solid var(--border2)">
+            <td style="color:var(--text);font-size:9px;letter-spacing:1px;text-transform:uppercase">TOTAL</td>
+            <td>${chipExitCTR(tExitCTR)}</td>
+            <td><b>${totLPV}</b></td>
+            <td>${chipCPLPV(tCPLPV)}</td>
+            <td>${chipConnect(tConnect)}</td>
+            <td style="color:var(--blue)">€${totSpend.toFixed(2)}</td>
+            <td style="color:var(--green)"><b>${totLeads}</b></td>
+            <td>${chipCPL(tCPL)}</td>
+            <td><span style="color:var(--muted)">—</span></td>
+            <td><span style="color:var(--muted)">—</span></td>
+            <td><span style="color:var(--muted)">—</span></td>
+            <td>${chip1sRet(tRet1s)}</td>
+            <td>${chipHook(tHook)}</td>
+            <td>${chipDrop(tDrop)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>GOOD</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>WATCH</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>OPTIMIZE</div>
+      <div style="margin-left:auto;font-size:8px;color:var(--muted);font-family:var(--mono)">
+        EXIT CTR: &gt;2% ✓ · CONNECT: &gt;70% ✓ · CPL: &lt;€8 ✓ · 1S RET: &gt;90% ✓ · HOOK: &gt;10% ✓ · DROP: &gt;8% ✓
+      </div>
+    </div>
+  </div>`;
+
+  container.insertAdjacentHTML('beforeend', html);
+});
+</script>
+
+<div id="main"></div>
+
+<div class="footer">
+  PONTUS FINANCE · ACT_1664503901571256 · CAMPANHA: ABO – LEAD PONTUS – ADD TO CART – BT01 · META GRAPH API v19 · GERADO EM 06 ABR 2026<br>
+  ⚠ IG VISITS / SEGUIDORES / CPF não estão disponíveis via Marketing API — consultar o Instagram Insights manualmente
+</div>
+
+</body>
+</html>
