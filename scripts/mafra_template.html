@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>João Mafra · WEBNAR · Campaign Intelligence</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060f0b;--sb:#091510;--card:#0d1f16;--card2:#112518;--card3:#16301f;
+  --b1:rgba(0,196,168,0.10);--b2:rgba(0,196,168,0.05);--b3:rgba(0,196,168,0.15);
+  --p:#00c4a8;--p2:#33d4bc;--p3:rgba(0,196,168,0.12);
+  --g:#00c4a8;--g2:#33d4bc;
+  --y:#d4a84b;--y2:#e8c06a;
+  --r:#e05252;--r2:#f47070;
+  --text:#f0faf7;--muted:#4a7a5a;--muted2:#7aaa8a;
+  --sw:264px;
+}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
+.layout{display:flex;min-height:100vh}
+
+/* ─── SIDEBAR ─── */
+.sb{width:var(--sw);flex-shrink:0;background:var(--sb);border-right:1px solid var(--b1);
+    position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:20;display:flex;flex-direction:column}
+.sb-top{padding:22px 18px 16px}
+.sb-brand{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.sb-avatar{width:44px;height:44px;border-radius:50%;border:2px solid var(--y);
+           overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,var(--y),var(--y2));
+           display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#060f0b}
+.sb-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.sb-icon{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--y),var(--y2));
+         display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#060f0b;flex-shrink:0}
+.sb-name{font-size:14px;font-weight:700;color:var(--text)}
+.sb-camp{font-size:9px;color:var(--muted);margin-top:2px;line-height:1.5}
+.sb-kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.sb-kpi{background:var(--card2);border:1px solid var(--b1);border-radius:8px;padding:10px 12px}
+.sb-kpi-l{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px}
+.sb-kpi-v{font-size:14px;font-weight:700}
+.sb-divider{height:1px;background:var(--b1);margin:0 18px}
+.sb-section{padding:12px 18px 6px;font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
+.sb-nav{padding:0 10px}
+.sb-nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;margin-bottom:2px;
+             cursor:pointer;transition:all 0.15s;font-size:11px;font-weight:500;color:var(--muted2)}
+.sb-nav-item:hover,.sb-nav-item.active{background:var(--p3);color:var(--p2)}
+.sb-nav-item svg{width:13px;height:13px;flex-shrink:0}
+.sb-creative-list{padding:0 10px}
+.sb-c{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;margin-bottom:3px;
+      cursor:pointer;transition:all 0.15s;border:1px solid transparent}
+.sb-c:hover{background:var(--card2)}
+.sb-c.active{background:var(--p3);border-color:rgba(0,196,168,0.25)}
+.sb-c-thumb{width:34px;height:34px;border-radius:6px;object-fit:cover;border:1px solid var(--b1);background:var(--card3);flex-shrink:0}
+.sb-c-info{flex:1;min-width:0}
+.sb-c-name{font-size:10px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.sb-c-sub{font-size:9px;color:var(--muted);margin-top:1px}
+.badge{font-size:8px;padding:2px 7px;border-radius:10px;font-weight:700;flex-shrink:0;white-space:nowrap}
+.bg{background:rgba(212,168,75,0.18);color:var(--y2);border:1px solid rgba(212,168,75,0.35)}
+.by{background:rgba(0,196,168,0.12);color:var(--p2);border:1px solid rgba(0,196,168,0.25)}
+.br{background:rgba(224,82,82,0.12);color:var(--r2);border:1px solid rgba(224,82,82,0.25)}
+.bn{background:var(--card2);color:var(--muted2);border:1px solid var(--b1)}
+.sb-footer{margin-top:auto;padding:14px 18px;border-top:1px solid var(--b1)}
+.sb-footer-text{font-size:9px;color:var(--muted);line-height:1.8}
+
+/* ─── MAIN ─── */
+.main{margin-left:var(--sw);flex:1;padding:28px 30px;min-width:0}
+.topbar{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px}
+.topbar-l h1{font-size:21px;font-weight:800;letter-spacing:-0.5px;
+  background:linear-gradient(90deg,var(--text) 60%,var(--p2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar-l p{font-size:12px;color:var(--muted2);margin-top:3px}
+.topbar-r{display:flex;gap:8px;align-items:center}
+.pill{display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;font-size:10px;font-weight:600}
+.pill-live{background:rgba(0,196,168,0.1);border:1px solid rgba(0,196,168,0.25);color:var(--p2)}
+.pill-date{background:var(--card);border:1px solid var(--b1);color:var(--muted2)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--p2);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ─── KPI STRIP ─── */
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px}
+.kc{background:var(--card);border:1px solid var(--b1);border-radius:12px;padding:18px 16px;position:relative;overflow:hidden}
+.kc.hi{border-color:rgba(0,196,168,0.35);background:linear-gradient(135deg,rgba(0,196,168,0.14),rgba(51,212,188,0.05))}
+.kc.hi2{border-color:rgba(212,168,75,0.30);background:linear-gradient(135deg,rgba(212,168,75,0.13),rgba(232,192,106,0.04))}
+.kc.hi3{border-color:rgba(0,196,168,0.25);background:linear-gradient(135deg,rgba(0,196,168,0.10),rgba(51,212,188,0.03))}
+.kc-glow{position:absolute;top:-24px;right:-24px;width:72px;height:72px;border-radius:50%;opacity:.15;filter:blur(18px)}
+.kc-l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:8px}
+.kc-v{font-size:22px;font-weight:800;letter-spacing:-0.8px;line-height:1}
+.kc-s{font-size:10px;color:var(--muted);margin-top:5px}
+.kc-t{font-size:10px;font-weight:600;margin-top:3px}
+
+/* ─── CHARTS GRID ─── */
+.charts-row{display:grid;grid-template-columns:2.2fr 1fr 1fr;gap:14px;margin-bottom:20px}
+.chart-card{background:var(--card);border:1px solid var(--b1);border-radius:12px;padding:20px}
+.ch-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.ch-title{font-size:12px;font-weight:700}
+.ch-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.ch-legend{display:flex;gap:12px;flex-wrap:wrap}
+.leg-i{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--muted)}
+.leg-d{width:7px;height:7px;border-radius:50%}
+
+/* ─── SECTION ─── */
+.section-hd{display:flex;align-items:center;justify-content:space-between;margin:8px 0 14px}
+.section-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.section-title::before{content:'';display:block;width:3px;height:15px;border-radius:2px;background:linear-gradient(var(--p),var(--p2))}
+
+/* ─── CREATIVE CARD ─── */
+.cc{background:var(--card);border:1px solid var(--b1);border-radius:14px;margin-bottom:18px;overflow:hidden}
+.cc-header{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;
+           padding:18px 22px;border-bottom:1px solid var(--b1);
+           background:linear-gradient(90deg,rgba(0,196,168,0.08),rgba(212,168,75,0.03),transparent)}
+.cc-thumb{width:60px;height:60px;border-radius:10px;object-fit:cover;border:1px solid var(--b3);background:var(--card3);flex-shrink:0}
+.cc-info .cc-name{font-size:13px;font-weight:700;margin-bottom:4px}
+.cc-info .cc-adset{font-size:10px;color:var(--muted);margin-bottom:6px}
+.cc-info .cc-links{display:flex;gap:8px}
+.preview-btn{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:9px;font-weight:600;text-decoration:none;transition:all .15s;border:1px solid}
+.preview-fb{background:rgba(0,196,168,0.08);color:var(--p2);border-color:rgba(0,196,168,0.22)}
+.preview-fb:hover{background:rgba(0,196,168,0.18)}
+.cc-right-stats{display:flex;gap:20px}
+.cc-stat{text-align:right}
+.cc-stat-v{font-size:18px;font-weight:800;line-height:1}
+.cc-stat-l{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-top:2px}
+
+/* METRICS GRID inside card */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--b2);border-bottom:1px solid var(--b1)}
+.m-cell{background:var(--card2);padding:13px 16px}
+.m-lbl{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;font-weight:600}
+.m-val{font-size:14px;font-weight:700;line-height:1}
+.m-sub{font-size:9px;color:var(--muted);margin-top:3px}
+
+/* TWO-PANEL layout inside card */
+.cc-two{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--b1)}
+.cc-panel{padding:18px 20px;border-right:1px solid var(--b1)}
+.cc-panel:last-child{border-right:none}
+.cc-panel-title{font-size:10px;font-weight:600;color:var(--muted2);margin-bottom:14px;text-transform:uppercase;letter-spacing:0.8px}
+
+/* AGE TABLE */
+.age-table{width:100%;border-collapse:collapse;font-size:11px}
+.age-table th{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:6px 10px;text-align:right;border-bottom:1px solid var(--b1);font-weight:600}
+.age-table th:first-child{text-align:left}
+.age-table td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--b2);font-size:10px}
+.age-table td:first-child{text-align:left;font-weight:600;color:var(--muted2)}
+.age-table tr:last-child td{border-bottom:none}
+.age-table tr.tot td{background:rgba(0,196,168,0.07);font-weight:700;border-top:1px solid rgba(0,196,168,0.2)}
+
+/* CHIPS */
+.chip{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;min-width:48px}
+.cg{background:rgba(0,196,168,0.13);color:var(--p2);border:1px solid rgba(0,196,168,0.22)}
+.cy{background:rgba(212,168,75,0.12);color:var(--y2);border:1px solid rgba(212,168,75,0.22)}
+.cr{background:rgba(224,82,82,0.11);color:var(--r2);border:1px solid rgba(224,82,82,0.18)}
+.cn{color:var(--muted)}
+
+/* FOOTER */
+.footer{margin-top:28px;padding:18px;text-align:center;font-size:9px;color:var(--muted);border-top:1px solid var(--b1);line-height:1.8}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(0,196,168,.3);border-radius:2px}
+
+/* ─── MOBILE MENU BUTTON ─── */
+.mob-toggle{display:none;position:fixed;top:14px;left:14px;z-index:100;
+  background:var(--card);border:1px solid var(--b3);border-radius:10px;
+  padding:9px 11px;cursor:pointer;flex-direction:column;gap:4px}
+.mob-toggle span{display:block;width:18px;height:2px;background:var(--text);border-radius:2px;transition:.2s}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:19;backdrop-filter:blur(2px)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:900px){
+  :root{--sw:240px}
+  .kpi-row{grid-template-columns:repeat(3,1fr)}
+  .charts-row{grid-template-columns:1fr}
+  .cc-two{grid-template-columns:1fr}
+  .cc-panel{border-right:none;border-bottom:1px solid var(--b1)}
+  .cc-panel:last-child{border-bottom:none}
+  .cc-right-stats{gap:12px}
+}
+
+@media(max-width:700px){
+  .mob-toggle{display:flex}
+  .sb-overlay{display:block;opacity:0;pointer-events:none;transition:opacity .25s}
+  .sb-overlay.open{opacity:1;pointer-events:all}
+  .sb{transform:translateX(-100%);transition:transform .25s;z-index:30}
+  .sb.open{transform:translateX(0)}
+  .main{margin-left:0;padding:16px 14px 24px;padding-top:60px}
+  .kpi-row{grid-template-columns:repeat(2,1fr);gap:8px}
+  .charts-row{grid-template-columns:1fr;gap:10px}
+  .topbar{flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:16px}
+  .topbar-r{flex-wrap:wrap;gap:6px}
+  .topbar-l h1{font-size:16px}
+  .cc-header{grid-template-columns:auto 1fr;gap:12px;padding:14px 14px}
+  .cc-right-stats{display:none}
+  .metrics-grid{grid-template-columns:repeat(2,1fr)}
+  .cc-two{grid-template-columns:1fr}
+  .cc-panel{padding:14px}
+  .cc-panel:last-child{border-bottom:none}
+  .cc-panel:first-child{border-bottom:1px solid var(--b1);border-right:none}
+  .kc-v{font-size:18px}
+  .charts-row .chart-card{padding:14px}
+  .section-hd{margin:14px 0 10px}
+}
+
+@media(max-width:400px){
+  .kpi-row{grid-template-columns:1fr 1fr}
+  .metrics-grid{grid-template-columns:1fr 1fr}
+  .cc-info .cc-links{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+<button class="mob-toggle" id="mob-toggle" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sb-overlay" id="sb-overlay"></div>
+
+<div class="layout">
+
+<!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
+<aside class="sb">
+  <div class="sb-top">
+    <div class="sb-brand">
+      <div class="sb-avatar" id="sb-avatar">JM</div>
+      <div>
+        <div class="sb-name">João Mafra · Webinar</div>
+        <div class="sb-camp">WEBNAR · <span id="sb-period">—</span></div>
+      </div>
+    </div>
+    <div class="sb-kpis">
+      <div class="sb-kpi"><div class="sb-kpi-l">Investimento</div><div class="sb-kpi-v" style="color:var(--p2)" id="sb-invest">—</div></div>
+      <div class="sb-kpi"><div class="sb-kpi-l">Leads</div><div class="sb-kpi-v" style="color:var(--g2)" id="sb-leads">—</div></div>
+      <div class="sb-kpi"><div class="sb-kpi-l">CPL Médio</div><div class="sb-kpi-v" style="color:var(--y2)" id="sb-cpl">—</div></div>
+      <div class="sb-kpi"><div class="sb-kpi-l">Impressões</div><div class="sb-kpi-v" style="color:var(--muted2)" id="sb-imp">—</div></div>
+    </div>
+  </div>
+  <div class="sb-divider"></div>
+  <div class="sb-section">Menu</div>
+  <div class="sb-nav">
+    <div class="sb-nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Visão Geral
+    </div>
+    <div class="sb-nav-item" onclick="document.getElementById('creatives-section').scrollIntoView({behavior:'smooth'})">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.89L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+      Criativos
+    </div>
+  </div>
+  <div class="sb-section">Criativos</div>
+  <div class="sb-creative-list" id="sb-list"></div>
+  <div class="sb-footer">
+    <div class="sb-footer-text">Meta API v19 · act_615338413578534<br>CA - João Mafra Lançamento<br>Atualizado · <span id="footer-updated">—</span></div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ════════════════════════════════════════════════ -->
+<main class="main">
+
+  <div class="topbar">
+    <div class="topbar-l">
+      <h1>Campaign Intelligence · WEBNAR</h1>
+      <p>CA - João Mafra Lançamento · Meta Ads · 7 dias</p>
+    </div>
+    <div class="topbar-r">
+      <div class="pill pill-date" id="date-pill">—</div>
+      <div class="pill pill-live"><span class="dot"></span>LIVE</div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kc hi">
+      <div class="kc-glow" style="background:var(--p2)"></div>
+      <div class="kc-l">Investimento</div>
+      <div class="kc-v" style="color:var(--p2)" id="kv-invest">—</div>
+      <div class="kc-s" id="ks-invest">—</div>
+    </div>
+    <div class="kc hi3">
+      <div class="kc-glow" style="background:var(--g2)"></div>
+      <div class="kc-l">Total Leads</div>
+      <div class="kc-v" style="color:var(--g2)" id="kv-leads">—</div>
+      <div class="kc-t" style="color:var(--g2)" id="ks-leads">—</div>
+    </div>
+    <div class="kc hi2">
+      <div class="kc-glow" style="background:var(--y2)"></div>
+      <div class="kc-l">CPL Médio</div>
+      <div class="kc-v" style="color:var(--y2)" id="kv-cpl">—</div>
+      <div class="kc-s" id="ks-cpl">—</div>
+    </div>
+    <div class="kc">
+      <div class="kc-l">Impressões</div>
+      <div class="kc-v" id="kv-imp">—</div>
+      <div class="kc-s" id="ks-imp">—</div>
+    </div>
+    <div class="kc">
+      <div class="kc-l">LPV Total</div>
+      <div class="kc-v" id="kv-vis">—</div>
+      <div class="kc-s">Land Page Views</div>
+    </div>
+    <div class="kc">
+      <div class="kc-l">Criativos Ativos</div>
+      <div class="kc-v" id="kv-cliques">—</div>
+      <div class="kc-s" id="ks-cliques">—</div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="ch-header">
+        <div><div class="ch-title">Leads · Faixa Etária por Criativo</div><div class="ch-sub">Distribuição de conversões por idade</div></div>
+        <div class="ch-legend" id="age-legend"></div>
+      </div>
+      <div style="height:210px"><canvas id="ageChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="ch-header"><div><div class="ch-title">Leads por Criativo</div><div class="ch-sub">Distribuição total</div></div></div>
+      <div style="height:210px"><canvas id="donutChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="ch-header">
+        <div><div class="ch-title">CPL por Criativo</div><div class="ch-sub">Custo por lead (€)</div></div>
+        <div class="ch-legend">
+          <div class="leg-i"><div class="leg-d" style="background:#00c4a8"></div>CPL</div>
+        </div>
+      </div>
+      <div style="height:210px"><canvas id="cplChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- CREATIVES -->
+  <div class="section-hd" id="creatives-section">
+    <div class="section-title">Análise por Criativo</div>
+  </div>
+  <div id="cc-container"></div>
+
+  <div class="footer">
+    João Mafra · WEBNAR · act_615338413578534 · Meta Graph API v19 · <span id="footer-period">—</span><br>
+    Atualizado automaticamente · Dados via Meta Marketing API
+  </div>
+</main>
+</div>
+
+<script>
+// ═══ DATA ══════════════════════════════════════════════════════════════════
+// __DATA_START__
+const META_PERIOD = {since:'2026-04-07', until:'2026-04-13', days:7};
+const CURRENCY = '€';
+const ACCOUNT_NAME = 'CA - João Mafra Lançamento';
+const CAMPAIGN_FILTER = 'WEBNAR';
+const AGES = ['18–24','25–34','35–44','45–54','55–64','65+'];
+
+const ADS = [
+  {
+    id:'120248912637990002', key:'nbp02vd', badge:'TOP', badgeClass:'bg',
+    name:'[NBP02VD]', shortName:'NBP02VD',
+    preview:'https://business.facebook.com/ads/api/preview_iframe.php?d=AQKfX5brZLGjVfE_eLDb7S79UN64ZdMxJjwvkK9AaVCNk6O6rYNL6Jnb0EJardN9oUBzQ_Jb_9T1JO3B4wpibr5TYm3dROUbFQ80S2mD6Dpw-jq-eM5T5igHTJ7SQIsWXEPx6XdQKJbX_xkIybc9TRKLMLkQTlu6Ioi9_HE6XtdSsbX00UEnEbUeoE-CLPjg1geE90KXYCXXSEnZquUmn0bYmhXVaIp_pp24blvQIepzL9faAH8dv5RJ7VEmKJNiWIhSQjJxalcmoTziuA2RAT86EXMaQeJmmHvy2VzXEVaC6lA1VwL-II9ROZbpuFWqS_iQ7yFkY8atpxd5uOQzBgNPPUDfQOLqHly8rmJreshHMv5S_HEHpZ2OtIoDayfnljFcfbUNEbCyYjArmVxzgW9KIousNrI-jLeZg9YCiipy8MRInbIyjjUVDzufIjQYc20&t=AQJKREVKJq1LWMRbyDk',
+    previewType:'fb',
+    thumb:'https://scontent.fnvt1-1.fna.fbcdn.net/v/t15.5256-10/657323046_4375145626083261_8088078719687937794_n.jpg?_nc_cat=105&ccb=1-7&_nc_ohc=gTWX2O7u8o4Q7kNvwFHLtWu&_nc_oc=AdqWn87Icuh4Gx52bp3m2nxKZTkaTh1PWmZFmIWrw2LqvmGDuOux7nkeGr6vIeTk1Lb-D3lkE9hSZESLD4xkMEm4&_nc_zt=23&_nc_ht=scontent.fnvt1-1.fna&edm=AAwGEdEEAAAA&_nc_gid=iXewXLDt96Q2klQ-HS7HeQ&_nc_tpa=Q5bMBQFYVuWN2LMKIa9VGJej3LJfoLZdwPZT7N6xOV04YsNhOYMyTyDeuhN4wEPXSEXT1smMmQNoiLShaQ&stp=c0.5000x0.5000f_dst-emg0_p64x64_q75_tt6&ur=5fad0e&_nc_sid=58080a&oh=00_Af180WSj4UIVdaXwBsMJb_6P9bq2HDnYAYkueEMokp2MXw&oe=69E2D073',
+    total:{spend:64.21, leads:25, imp:7895, cliques:0, lpv:86},
+    by_age:[
+      {age:'18–24', spend:17.23, leads:8,  imp:2567, lpv:26},
+      {age:'25–34', spend:26.48, leads:10, imp:2891, lpv:35},
+      {age:'35–44', spend:12.67, leads:5,  imp:1543, lpv:16},
+      {age:'45–54', spend:5.42,  leads:2,  imp:621,  lpv:7},
+      {age:'55–64', spend:1.95,  leads:0,  imp:199,  lpv:2},
+      {age:'65+',   spend:0.46,  leads:0,  imp:74,   lpv:0},
+    ]
+  },
+  {
+    id:'120248546729190002', key:'ad05', badge:'BOM', badgeClass:'by',
+    name:'[AD05]', shortName:'AD05',
+    preview:'https://business.facebook.com/ads/api/preview_iframe.php?d=AQJ4BT_euOqp86QPXLk-LMWG3BeDbJZtR-cfyxsd2LhGJIwNUZmsMjO7NxdN6x9NAhf1qm2gND4keHUtzdYamexC1SzqhFxh6SfFIL8_0MtgYJnEdvlPQpBZAbNQLPRk_TUVLM01167m8nA_H3A7iIsN40b9li3U0bQpsiFTs3YF0MtFVpFciJDNpYiYkgS6vi5g_uPpZgc_wOnuu48Tvt7SvguEbxtFC_HhnfDSphCCMyyPB8CtQu1nQhqEln8nwNNMUK7Mhtec9xhkJ64xlbP2m-pC9vcmGT8QVshivJb0_hS43FV1xJSEMsElnV4h8eTbeZvHB3-rkNzURJCTSJckwKXGahM4ivNQfFmn3VYJOjH7cwDs065xqi_6KumWf_BdQM_h8P5mXwtqujzvhnrjEIjxvKCQgiD3nWKFU9S2VC5x86F0guA8DtSapKVOQl0&t=AQLm4tuYHQ_5LWiVhPo',
+    previewType:'fb',
+    thumb:'https://external.fnvt1-1.fna.fbcdn.net/emg1/v/t13/8026561957111488242?url=https%3A%2F%2Fwww.facebook.com%2Fads%2Fimage%2F%3Fd%3DAQI-WTipeGFMsZR1EZuI-ZN6-OVh_vXNasD3Bwh-G4OZwYRn8HcyuXtv1esVRziGgq_mVJ6iP9Dnr00oIdKOWVy0mIsEsKDLOH9C_Ur4gsk74uyyghiwv1LsqQWa9XR8QY2Lf1tv4QKbFcwdmCz2VYv9&fb_obo=1&utld=facebook.com&stp=c0.5000x0.5000f_dst-emg0_p64x64_q75_tt6&edm=AAwGEdEEAAAA&_nc_gid=dOU4nkh5BUix1pxM_7bk5w&_nc_oc=AdpwBMzK6OeM9BbojhTveLd0BYuHnnapk1kNcxkwVmFBWxf_I5fkOzV2xko9ewf60Alc7hKxDmvqHg6MUXjHE5uU&ccb=13-1&oh=06_Q3--AcT6TR7FLo9qS_nuhOSFVJhkhDNDWMBRIGGA8xckAE27&oe=69DEC848&_nc_sid=58080a',
+    total:{spend:49.62, leads:9, imp:5165, cliques:0, lpv:51},
+    by_age:[
+      {age:'18–24', spend:15.31, leads:3, imp:1876, lpv:17},
+      {age:'25–34', spend:19.87, leads:4, imp:1923, lpv:20},
+      {age:'35–44', spend:9.44,  leads:2, imp:894,  lpv:10},
+      {age:'45–54', spend:3.67,  leads:0, imp:342,  lpv:3},
+      {age:'55–64', spend:1.02,  leads:0, imp:98,   lpv:1},
+      {age:'65+',   spend:0.31,  leads:0, imp:32,   lpv:0},
+    ]
+  },
+  {
+    id:'120249404804990002', key:'mdl2', badge:'REVISAR', badgeClass:'br',
+    name:'[MDL2]', shortName:'MDL2',
+    preview:'https://business.facebook.com/ads/api/preview_iframe.php?d=AQIiENigDXNTsq9hVHyQSnqzWUJ9tg5y9vOJGQDe4eWPYKxN-i9_MLxG7Dqt0RnuZwXdjOwAkHbbq57H9K6eWs-TJiW55Fy09r_T9w0-VhGghADiLPFzHB2YPyWvZYnhWXZrG1qFXbJC1BktuiaasF6neQ-qIQcrTHewGwrrWVZ4bFWWa6WrlHEhe5bVND2DSpdPMhxVw8IXT79ks1DmRZYKZH22Sf-5GBQikwcqLoXSkrW9MKquxXOV2vxhc7de8HB1Kw6865zzDq-0uBeSYMEZWRplxmtgUPhOHqkK21VKIcv1KHDH4jeAOCsdI1rgayygTxBuCQ7hqKugVOqEP56Ye98LQzIPveDuiBYk8wnp74wBxWcM4fa7-wlfLvkYl-PrgoY6fK22hZhx4pMkYlwtas4PExhRXELGfhqMlnieVodShvYS-Tr8Zsc0OWSBLiI&t=AQJtpZXKEV0r4it7XXA',
+    previewType:'fb',
+    thumb:'https://external.fnvt1-1.fna.fbcdn.net/emg1/v/t13/7293829514656529324?url=https%3A%2F%2Fwww.facebook.com%2Fads%2Fimage%2F%3Fd%3DAQJ0rmSwXyixgp2aG7rlKYaJlqI1FBuzH6vfsp6phvul220M45NmlCmZyM2ZhmdSQLaz_yN4dfA6z53XTM-sBCNnvRfBa9jZPyrQR34xOaBPXO-ysLiKgnzmVY3Edv6HAsDHpYdS0JuUGibXx36oIYlt&fb_obo=1&utld=facebook.com&stp=c0.5000x0.5000f_dst-emg0_p64x64_q75_tt6&edm=AAwGEdEEAAAA&_nc_gid=aC2Irb3UAvRR4qoQBCy3jQ&_nc_oc=AdpIlOHH9JstkBh_ufAkpjhm6nWiIdpPzAVYGZeaWba7pqly_qJmKBgEUI4ra-8nfE3cu8RxVLQ8rkXZm_TNR1NI&ccb=13-1&oh=06_Q3--AS72wdgqVI0TLQ3ouTKVz7QSoAvlHlwXyKX0htn7SI5p&oe=69DECC65&_nc_sid=58080a',
+    total:{spend:25.90, leads:3, imp:3182, cliques:0, lpv:30},
+    by_age:[
+      {age:'18–24', spend:8.12,  leads:1, imp:1102, lpv:10},
+      {age:'25–34', spend:10.34, leads:2, imp:1198, lpv:14},
+      {age:'35–44', spend:4.87,  leads:0, imp:578,  lpv:4},
+      {age:'45–54', spend:1.85,  leads:0, imp:218,  lpv:2},
+      {age:'55–64', spend:0.52,  leads:0, imp:64,   lpv:0},
+      {age:'65+',   spend:0.20,  leads:0, imp:22,   lpv:0},
+    ]
+  },
+  {
+    id:'120249134090730002', key:'nbp01vd', badge:'NOVO', badgeClass:'bn',
+    name:'[NBP01VD]', shortName:'NBP01VD',
+    preview:'https://business.facebook.com/ads/api/preview_iframe.php?d=AQInBsU9iQDzIdwiE2-JUkq1-imcDZsY9Kdm5-LweczCDc4pX3jZY8QkDi0CpWqOqDNOrxGq3vJnaljTlviC4Vr3DR1wpiOtw0KLi7bLuZGGRYPKqcsbOCuW0f61Ix7ij70PlyB7KT_N5Dwr3gayOYcvwGf8frOuP4F0WxSl8Xmn0dycAZCkrtGTKZ7dAZ_joERUiMyFP6rDHVjQLgaTkq9G-4RAE_IK9iN4pW1ryz7n1nG2Dc7WNV6sFv8kUq53XBlRVfO2ykuxsgIxEOJg70rCx-DHrJprS1fPtPYo1GjjC-vLlITwBWho3dC4LvDij6cAfTckC_mVvNXv-W1_CRIzVPWE8WgA-RmwvzUtsoFJmHz0X66X3TFqgXlxzXMxNa1LLnD4VLzDX2iwxtalFDXtYbHe1PNhVgw-lxh4sGQT6mYVo7N2y0Kf_2v_HNBCQy8&t=AQLevl-rvkaYaevSVC8',
+    previewType:'fb',
+    thumb:'https://scontent.fnvt1-1.fna.fbcdn.net/v/t15.5256-10/659773827_1360641989156870_8517687294043390867_n.jpg?_nc_cat=110&ccb=1-7&_nc_ohc=t-JYqBm1zrgQ7kNvwFI2wbm&_nc_oc=AdpX_wqdb-b-4oifKSJvEDgFqF7SU4GubygrJV_dvsQ1XWB4arQhgO18qP9CX_eDsBfH7Ej2i0iBMS_f6p3e98G0&_nc_zt=23&_nc_ht=scontent.fnvt1-1.fna&edm=AAwGEdEEAAAA&_nc_gid=vh4dcc3_qvJBX7OQYMbvpQ&_nc_tpa=Q5bMBQGG-61NaEVX3muQdDjG6fAk3OBWHAFsW3uoHR0PXnWrLFyhKuvKrYaDMCFB6kEfLg354ZHxWkHELA&stp=c0.5000x0.5000f_dst-emg0_p64x64_q75_tt6&ur=5fad0e&_nc_sid=58080a&oh=00_Af1wDbSX9uGKShkXMmC_Yu6cI2BkSDNYgFJS5467nO0FVw&oe=69E2C431',
+    total:{spend:9.54, leads:0, imp:876, cliques:0, lpv:3},
+    by_age:[
+      {age:'18–24', spend:3.12, leads:0, imp:312, lpv:1},
+      {age:'25–34', spend:3.87, leads:0, imp:341, lpv:2},
+      {age:'35–44', spend:1.54, leads:0, imp:143, lpv:0},
+      {age:'45–54', spend:0.71, leads:0, imp:62,  lpv:0},
+      {age:'55–64', spend:0.21, leads:0, imp:14,  lpv:0},
+      {age:'65+',   spend:0.09, leads:0, imp:4,   lpv:0},
+    ]
+  },
+  {
+    id:'120249134075240002', key:'nbp03vd', badge:'NOVO', badgeClass:'bn',
+    name:'[NBP03VD]', shortName:'NBP03VD',
+    preview:'https://business.facebook.com/ads/api/preview_iframe.php?d=AQKAloFKDqJGFqZmkXFQLnP3DyHs-hDPhG4V6TTcRrcB8Y__vreepI9bmJO_itPmXbE1GCMwNzwSkr9vY6Iypnja2nfahDDCc5dGdtttxjhwRomhYuF0Kp7IGGdxH_PGlD9CPlXNwiBVa-u-hpR5biSOfpahVcnXFV6ewI9IhUL56jK9Bc6_ZeepPRpa-U6uKT2luv5vG3v-a9QOTPi6e6NlFNKupDJ54ZJpafQdui34nyX6tTimzRhu6xMDgHO1HaO7zOR6zBWYweZBfHdpKgKRWl2LKSG_X5nSx7YfnFT41d3TWVqJQ7hhhr013C4QQOhBgLfVis4tQ0voKTqjLSZ0sk036kpyesc-0_-ru9EHIfmUdv5Hu7b-WQv0qY_tkGF9nNz2EB17yYU_6VjURRL_JIxHjf4YQO1w4Zz8HqbxMHEvTq2YbuUN5AhPtkD2lak&t=AQJg7HmzUykJT7mugXY',
+    previewType:'fb',
+    thumb:'https://scontent.fnvt1-1.fna.fbcdn.net/v/t15.5256-10/659124320_2341565369659649_8338726989294617128_n.jpg?_nc_cat=105&ccb=1-7&_nc_ohc=jjuSWwONmooQ7kNvwFILQps&_nc_oc=AdrxcbYgLA8h0_95--JpYpJrpzm-xOiXvS-kl9vmziedLR6hUImbeUDVYjzmGqZmYgOOsSD1YrGOJCMLIBJ9G03U&_nc_zt=23&_nc_ht=scontent.fnvt1-1.fna&edm=AAwGEdEEAAAA&_nc_gid=To2gcRFJ66V_bE6AcgNfCA&_nc_tpa=Q5bMBQFxvmIRCf64-V5h6KZASC8WERj-t3fet1bVfe58fV2Ipklt4Memh3-s0LuZJjA9sjAlHv-KL4o7Zg&stp=c0.5000x0.5000f_dst-emg0_p64x64_q75_tt6&ur=5fad0e&_nc_sid=58080a&oh=00_Af0-HLXxqJz1jwqyx38XjDEvYvVE0-dquByYfjn5yV2UmA&oe=69E2ADFD',
+    total:{spend:9.08, leads:0, imp:1646, cliques:0, lpv:13},
+    by_age:[
+      {age:'18–24', spend:3.02, leads:0, imp:598, lpv:5},
+      {age:'25–34', spend:3.64, leads:0, imp:621, lpv:6},
+      {age:'35–44', spend:1.44, leads:0, imp:289, lpv:2},
+      {age:'45–54', spend:0.65, leads:0, imp:103, lpv:0},
+      {age:'55–64', spend:0.24, leads:0, imp:28,  lpv:0},
+      {age:'65+',   spend:0.09, leads:0, imp:7,   lpv:0},
+    ]
+  },
+  {
+    id:'120249404788430002', key:'mdl3a', badge:'NOVO', badgeClass:'bn',
+    name:'[MDL3] A', shortName:'MDL3-A',
+    preview:'https://business.facebook.com/ads/api/preview_iframe.php?d=AQKXIFtWx1HhOdQlGP8mjWLnVbREg8_TjRhGI0-OoGqMPs5v5dp0z4mxtdgXuXA6ND3OEyDNuvcXhST-ghgqrSk6AvuANE-tTqEvdrNLUkAOdDwEWYbVu0yum7SGWfRC5HJqSx_FuhYHcVS7QZlbPCBx_2SD-UwATVNNu87zZtOcnD19ZC90beOZk-7Pxzj5-ADv6a2x1Z3HTMiPDjDBpSIk7pjVagI_unVRSO8JnJQyUR26JdaHBG3AT490NWv2CQvmUIby_5jz4K5AtMoj1xA6IuPfkC8Jl7ykUmSSYccgwQVjHB8uF7CpmhMc_LGL7UAzrA7kOHRUbCkrL98zO9aoyEUkfTh2END6AuAawYQFbvbQahHY6oMlLAdByMkZ6HSeIkSE-pWekCQdhFUTtlXpIGEQtqIQsuPlLxh8Uvc32IAvfyJZ10PBRtvt5T13UeE&t=AQIZBLxAUCaCtECvtLk',
+    previewType:'fb',
+    thumb:'https://external.fnvt1-1.fna.fbcdn.net/emg1/v/t13/15036827459784212920?url=https%3A%2F%2Fwww.facebook.com%2Fads%2Fimage%2F%3Fd%3DAQKYiWZoyrHVhQlH4lzTK_sP6fhPkEFpqlLXJ-CLEVqIa8DdIPQm29RzBJq5cot-UrjaXbw01DGpMMU0oLDDxF8W-0z1eemqxRY_lZpBzmfH5KftDL2aWCXVA0kjHQ_PuW9QDZtoufZJrc31cd4Uz1c_&fb_obo=1&utld=facebook.com&stp=c0.5000x0.5000f_dst-emg0_p64x64_q75_tt6&edm=AAwGEdEEAAAA&_nc_gid=uDZBQu_hFbpNI_YajkoyLg&_nc_oc=AdoYGWSF-rRdVtof--OX0FzH7dxKTnVgTJM4nrZSBWDSwwhALAHzs--Q-YuLXJZB679l3iiaEBiv8sqVUlgzEOaJ&ccb=13-1&oh=06_Q3--AVissh26ZWXHOMgpepHASQGuzKCp12D8kEtCarEjqJav&oe=69DEB2D0&_nc_sid=58080a',
+    total:{spend:8.32, leads:1, imp:1172, cliques:0, lpv:4},
+    by_age:[
+      {age:'18–24', spend:2.87, leads:0, imp:423, lpv:2},
+      {age:'25–34', spend:3.21, leads:1, imp:445, lpv:2},
+      {age:'35–44', spend:1.43, leads:0, imp:214, lpv:0},
+      {age:'45–54', spend:0.54, leads:0, imp:68,  lpv:0},
+      {age:'55–64', spend:0.19, leads:0, imp:17,  lpv:0},
+      {age:'65+',   spend:0.08, leads:0, imp:5,   lpv:0},
+    ]
+  },
+  {
+    id:'120249404792810002', key:'ad03', badge:'NOVO', badgeClass:'bn',
+    name:'[AD03]', shortName:'AD03',
+    preview:'https://business.facebook.com/ads/api/preview_iframe.php?d=AQIhpktJ3uEKVlJDKSnjd5TzH0ANurahUSrf0Dlm3KCXk2M4XfHo08lvBbmHocq2z1NRCcsOdoS41TStI_Ol2MLeqM4Ccvt4aYlfbb9JirUsfDqUqkjX1m9K7M7BTW_gtg8yWO2RA6a5_Ofl7WuryJy3_3LB2VHbpFNkx-flcoNLE9iLeDJJ_jrCkAeP6tUHoioa10nOaObhu2bf95c861i6W6SCoWhFj0pZUM17WlklCDNgQfRfLay_vpNtvdBKCJNjY5X3n8NmWeRwHh3x4AVc9MFXci0OhmtL4sq6Rc7NMSoBh3UcDBCsO2a-oQI9zMXHmUmC_TRO9DlLI3-rF_VR4BQ7QAA-oUFKoNtG4kG9EkpBK-kRRAlasw0q1s6foXB0GpGzBaXLMQ3oYvK6ej5OwiJYLJFvrpATGfdXUenxZ20FTeGhTqn4_Cpz5R1QEuo&t=AQLb7Q6UFrhVF7QRWIM',
+    previewType:'fb',
+    thumb:'https://external.fnvt1-1.fna.fbcdn.net/emg1/v/t13/7181614722709825649?url=https%3A%2F%2Fwww.facebook.com%2Fads%2Fimage%2F%3Fd%3DAQId32vrM9fbBhvY8PFhzOH9-IiEs3Wnt-AyjyEOXyH27gY9htNAOeVn32NaMI6m-5YnEkmAJlCR7M5nIPaJEO0XlwE5oCTqxp9y3NWnZ9wtr-xGjdC7hJXtNQrR3_Pp2-s8HApbH2bek7C0YqPH1ona&fb_obo=1&utld=facebook.com&stp=c0.5000x0.5000f_dst-emg0_p64x64_q75_tt6&edm=AAwGEdEEAAAA&_nc_gid=bTUC6a7VsTCDaRfBF78GFw&_nc_oc=AdoOk9zoyB2ihzwBedUmztui2Q8BSQPkj4YdmoFmGxb1sBfjjyeAOhBV_Ph0LHciOAUSVZ6Bx7XReao1J_ZzI9Zr&ccb=13-1&oh=06_Q3--AVQtZuoc2wHsV9S8wwoY9XCKQHhfWM-H27LjP8Thzx4Q&oe=69DEBF58&_nc_sid=58080a',
+    total:{spend:6.92, leads:1, imp:1047, cliques:0, lpv:9},
+    by_age:[
+      {age:'18–24', spend:2.34, leads:0, imp:389, lpv:3},
+      {age:'25–34', spend:2.71, leads:1, imp:392, lpv:4},
+      {age:'35–44', spend:1.14, leads:0, imp:178, lpv:2},
+      {age:'45–54', spend:0.49, leads:0, imp:64,  lpv:0},
+      {age:'55–64', spend:0.18, leads:0, imp:19,  lpv:0},
+      {age:'65+',   spend:0.06, leads:0, imp:5,   lpv:0},
+    ]
+  },
+  {
+    id:'120248547611830002', key:'ad02a', badge:'NOVO', badgeClass:'bn',
+    name:'[AD02] A', shortName:'AD02-A',
+    preview:'https://business.facebook.com/ads/api/preview_iframe.php?d=AQLyXjFjawIYyC8XnMGAuoZirjOzsUsOgykZSYL0DPb58KgupjLehM7jooe2v6G9RMHUnNPn7YdMMe74TLigSnolwgdo1Jt0KAjjomiF2ZL8Pz7BQZBg8zZmVpmhaE0qlO0Wts5aRMdTMyd9o935mRo9XUo_CGj3071u7zgAvuhmHUa0pzqnLwqBEQnRC2_MjhLksuNmqvtfDpW63Ihc99v5mcIdQfavDPQSr3mvrz_jQqB4jYeTCxpHqaCDboF88RHlSDt6BWX5mh4l61e8_Z0LaG6Ru_O_z4r_DCmpaJ3NfwHMjXnfsLc37wEnVUgURqduE5X1H5QV59swZX2-5jjojJzRfFaMLPW8ObvMrkWen_yUulKegsFkK6MnOuRSyPTWxBhV4EjgWTNqnzRWcl6VBij2WSN23SRLx24sd908Zx9IekCQHqo4VVBtJH6Kbzg&t=AQKb9RUJvVheZ3L3gCI',
+    previewType:'fb',
+    thumb:'https://external.fnvt1-1.fna.fbcdn.net/emg1/v/t13/15130340720575049228?url=https%3A%2F%2Fwww.facebook.com%2Fads%2Fimage%2F%3Fd%3DAQKig267YiVoaez3chH7k_4vfyQffmWcI9z1-vRviukZbyiSwSeLDblv7RFKVASb9xAXUKgBPt-Gx3kiWtmIGxh5HB8FRRe5_m0nhz-tjTQb3Nw5jwstaQD2L9OE8BkLqpEzEAqG7c94wHNDcKmqaw3a&fb_obo=1&utld=facebook.com&stp=c0.5000x0.5000f_dst-emg0_p64x64_q75_tt6&edm=AAwGEdEEAAAA&_nc_gid=U2w7Tb2WaL688dsYouupoA&_nc_oc=AdrqNvoyl5gO4Px5YJzMlXhm9NgIhKJHdjbp7hAvLWl_zhFoUSR8iuvXWgcZQEVvF3glQiMiadihRBb3ARjIwZSI&ccb=13-1&oh=06_Q3--Ad7GRZTxlUHTZ-fBWT4ElEx-gM1iMD09jP7CkxTFr_Ta&oe=69DEC155&_nc_sid=58080a',
+    total:{spend:5.57, leads:0, imp:956, cliques:0, lpv:3},
+    by_age:[
+      {age:'18–24', spend:1.92, leads:0, imp:352, lpv:1},
+      {age:'25–34', spend:2.21, leads:0, imp:359, lpv:2},
+      {age:'35–44', spend:0.89, leads:0, imp:162, lpv:0},
+      {age:'45–54', spend:0.38, leads:0, imp:63,  lpv:0},
+      {age:'55–64', spend:0.13, leads:0, imp:15,  lpv:0},
+      {age:'65+',   spend:0.04, leads:0, imp:5,   lpv:0},
+    ]
+  },
+  {
+    id:'120248802155360002', key:'mdl3b', badge:'NOVO', badgeClass:'bn',
+    name:'[MDL3] B', shortName:'MDL3-B',
+    preview:'https://business.facebook.com/ads/api/preview_iframe.php?d=AQLQ6bTenrnV4_pNfKTbOKf3LQrX1fy_URB1DC8VKCA73xYsWu7vE9_JYOFj-izLZ9IX_6_wc-yWRDjzTQKUGKtusHdd-_atzqeEFWtIPfAt_a0uLB2bGMdsFMhz6F-J0v5Qr7XpRDdl0mAKlAIn6QPip_P2bjX6yH1AQ_BQqM-4IXHDuELp517oXQFDn-D8dJrhPhWh08j-SZk4nbvJZCaZ4nvnstqS-efYhs9AA4VblZRiS5lKyQLo8d9GGvo5sm1x6_XcalA2HI9YaqJx8Yglwsl1Kg4s4geapoVDxEgN_NDrkjgHoLS4QRRqgBUjqu27jAPmmTMDizqkcGlduUfJO5ge3WgN6qzBDq3ZwCnIInLRWJas5awiz3vlIutfaJhy6IanVj-ACo5jb6u7Gnxq73H-INO1aIfSXJg0HxgNjTF3fRjO_r2xc0VZ9Xw5GT4&t=AQJ31nYwDGN258zOpv8',
+    previewType:'fb',
+    thumb:'https://external.fnvt1-1.fna.fbcdn.net/emg1/v/t13/969637440397396586?url=https%3A%2F%2Fwww.facebook.com%2Fads%2Fimage%2F%3Fd%3DAQJL7Fax7NMqkqYywCvraQufNUKV2Es_vaoVWZ4VYF3aJIezp82-85ZDGnu7RrIpu_cN581whnwl1Iie59mSlq5XUg5vMVHkBbcmvEscRsGuScjVv-gsKmwclEt3UPd6ffXDfjR06hiIxc3Z2WLcUb95&fb_obo=1&utld=facebook.com&stp=c0.5000x0.5000f_dst-emg0_p64x64_q75_tt6&edm=AAwGEdEEAAAA&_nc_gid=RChCnMdYMkzLnkydj3_fDw&_nc_oc=AdrdD4S-n2NIEeYVg751ZQ_E3IlvLSMhA1PyP4ZjrkGBf-xfkRVL87VqXEuxAX78GK6s66d1Mn8w35Pkl3yaQaQB&ccb=13-1&oh=06_Q3--Ac1VdO5lCk3WdyKmFQ8xNuPSwCUUnTnMz7Y1qdI1W39v&oe=69DEB3E7&_nc_sid=58080a',
+    total:{spend:5.48, leads:0, imp:766, cliques:0, lpv:6},
+    by_age:[
+      {age:'18–24', spend:1.87, leads:0, imp:278, lpv:2},
+      {age:'25–34', spend:2.18, leads:0, imp:291, lpv:3},
+      {age:'35–44', spend:0.87, leads:0, imp:133, lpv:1},
+      {age:'45–54', spend:0.37, leads:0, imp:48,  lpv:0},
+      {age:'55–64', spend:0.13, leads:0, imp:12,  lpv:0},
+      {age:'65+',   spend:0.06, leads:0, imp:4,   lpv:0},
+    ]
+  },
+  {
+    id:'120249470568490002', key:'nbp03vd_copy', badge:'NOVO', badgeClass:'bn',
+    name:'[NBP03VD] Cópia', shortName:'NBP03VD-C',
+    preview:'https://business.facebook.com/ads/api/https://business.facebook.com/ads/api/preview_iframe.php?d=AQKKngHNOYlL1NnpZUpr2R3w0KpPHHBTBoGq5uNJ190HdcfQ8BcWxBficEwjcFBKYGxMamzKgXejLtmKw4qXilDudEopMvJJVX118G0X0_XVcav7fPAYve92YXJ2vt_3H5PEpaUZfrKfuuEIj4NuH49uLNu2IO0mr_KYxClT91rFWYCoQZCVqVQur04GM_Qz5bz1lwFBSRhXthXsS3ir1LhlIfpk6eSqRU1aLZStJIhPQWEmaY6MjqIpaJji3wo50YgrOEojpWjS1UxUerUVvKEBR46cLGkIDgfciNa6rT2prLkBl5FT1v8387G-IeIcqRBSuHrH9q45urtPMWd1MF38hvBzzQFb6U90xlVQi-MVPHB6bLFDfV0vRGn9RwAnoMiNRhrB_MftVJkJYdupiNmwQ0VueC-UpQ_F7hqIfALbMp14zvHU7ESjdteogq5Gm_spreview_iframe.php?d=NBP03VDC_previewt=AQLxhom44xrp_NK6jLU',
+    previewType:'fb',
+    thumb:'https://scontent.fnvt1-1.fna.fbcdn.net/v/t15.5256-10/659124320_2341565369659649_8338726989294617128_n.jpg?_nc_cat=105&ccb=1-7&_nc_ohc=jjuSWwONmooQ7kNvwFILQps&_nc_oc=AdrxcbYgLA8h0_95--JpYpJrpzm-xOiXvS-kl9vmziedLR6hUImbeUDVYjzmGqZmYgOOsSD1YrGOJCMLIBJ9G03U&_nc_zt=23&_nc_ht=scontent.fnvt1-1.fna&edm=AAwGEdEEAAAA&_nc_gid=I-0CQ31jZCF5tputdqz3Rw&_nc_tpa=Q5bMBQHAbAHJV0yOzZLljP_Rkekdauu2TGMTD19WKEAyomHF0vi3p1Ej7BxSgdgsQiARVu5KT8GUnRi5fg&stp=c0.5000x0.5000f_dst-emg0_p64x64_q75_tt6&ur=5fad0e&_nc_sid=58080a&oh=00_Af1ipJ6wRDWoSrQvDDkMdgLqh8V51FFoBdDYyC9l5VMdGA&oe=69E2ADFD',
+    total:{spend:2.12, leads:0, imp:216, cliques:0, lpv:4},
+    by_age:[
+      {age:'18–24', spend:0.72, leads:0, imp:79, lpv:2},
+      {age:'25–34', spend:0.87, leads:0, imp:83, lpv:2},
+      {age:'35–44', spend:0.34, leads:0, imp:37, lpv:0},
+      {age:'45–54', spend:0.14, leads:0, imp:13, lpv:0},
+      {age:'55–64', spend:0.04, leads:0, imp:3,  lpv:0},
+      {age:'65+',   spend:0.01, leads:0, imp:1,  lpv:0},
+    ]
+  },
+  {
+    id:'120249404790490002', key:'ad02b', badge:'NOVO', badgeClass:'bn',
+    name:'[AD02] B', shortName:'AD02-B',
+    preview:'https://business.facebook.com/ads/api/preview_iframe.php?d=AQJBz-lS-KHn6Utqo6fPkzFq8q5cCckLCoo0K10gUuaOdsKZfQgfCNWkES09eGROIoN2nntrDaN5xACemqOSRK1HmKUazUA6AKQhlf7CxPurim_VWQc0RRqxd6FNDs1OPVBgvJUbhBN1aCImlZVBZ_C_xlcvP6m87eNVzYo7T9_PbXwKYRo6Sez6P0HOUgvlxAkKn3-Y-v11Cu3mZFfBmCn4MdDXfYx8vlJA61Fiev_X_U_E-abixanrtzIEg6Y-F4mchfxMiWN91EK7X55i8F4BCwZoQ9519erdAOkUV34mHMK9O_TnBtOJ2-70my0AUOi189irYoM1eh0HjAyCuBFYZLUiF-Q1d0-KCSNaNbE6vxMvxeodyMReryAdetR4hxpDkxnWqWtTYagOX5LvGeSYVSAUe2tjFR4ztVzRgCnhhWzvPfen-c3UwLGSU1u0Ev8&t=AQLtm2-spbNHDq450CA',
+    previewType:'fb',
+    thumb:'https://external.fnvt1-1.fna.fbcdn.net/emg1/v/t13/15130340720575049228?url=https%3A%2F%2Fwww.facebook.com%2Fads%2Fimage%2F%3Fd%3DAQKig267YiVoaez3chH7k_4vfyQffmWcI9z1-vRviukZbyiSwSeLDblv7RFKVASb9xAXUKgBPt-Gx3kiWtmIGxh5HB8FRRe5_m0nhz-tjTQb3Nw5jwstaQD2L9OE8BkLqpEzEAqG7c94wHNDcKmqaw3a&fb_obo=1&utld=facebook.com&stp=c0.5000x0.5000f_dst-emg0_p64x64_q75_tt6&edm=AAwGEdEEAAAA&_nc_gid=1ryYbbkf5_04eXmEfTIyYw&_nc_oc=AdrqNvoyl5gO4Px5YJzMlXhm9NgIhKJHdjbp7hAvLWl_zhFoUSR8iuvXWgcZQEVvF3glQiMiadihRBb3ARjIwZSI&ccb=13-1&oh=06_Q3--AefAsVOxk1i2MYC0SYzKYSddJjnrGzD_6cgoU0X6Jna2&oe=69DEC155&_nc_sid=58080a',
+    total:{spend:1.45, leads:0, imp:170, cliques:0, lpv:1},
+    by_age:[
+      {age:'18–24', spend:0.51, leads:0, imp:63, lpv:1},
+      {age:'25–34', spend:0.57, leads:0, imp:64, lpv:0},
+      {age:'35–44', spend:0.23, leads:0, imp:29, lpv:0},
+      {age:'45–54', spend:0.10, leads:0, imp:10, lpv:0},
+      {age:'55–64', spend:0.03, leads:0, imp:3,  lpv:0},
+      {age:'65+',   spend:0.01, leads:0, imp:1,  lpv:0},
+    ]
+  },
+];
+// __DATA_END__
+
+// ═══ HELPERS ══════════════════════════════════════════════════════════════
+const R = v => v == null || !isFinite(v) ? null : v;
+const eur = v => v == null ? '—' : `€${v.toFixed(2).replace('.', ',')}`;
+const pct = v => v == null ? '—' : `${v.toFixed(1)}%`;
+const num = v => v === 0 ? '—' : v;
+
+function chip(v, thG, thY, fmt_fn, inv=false) {
+  if (v == null || !isFinite(v)) return `<span class="cn">—</span>`;
+  let c = inv ? (v <= thG ? 'cg' : v <= thY ? 'cy' : 'cr') : (v >= thG ? 'cg' : v >= thY ? 'cy' : 'cr');
+  return `<span class="chip ${c}">${fmt_fn(v)}</span>`;
+}
+const cCTR    = v => chip(v, 2, 1, v => v.toFixed(2) + '%');
+const cCPL    = v => chip(v, 2.50, 5, eur, true);
+const cLPV    = v => `<b>${v || '—'}</b>`;
+const cLeads  = v => v ? `<b style="color:var(--g2)">${v}</b>` : `<span class="cn">—</span>`;
+const cCPV    = v => chip(v, 3, 6, eur, true);
+
+// ═══ DYNAMIC GLOBALS ══════════════════════════════════════════════════════
+(function() {
+  const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  function fmtD(s) { const [y,m,d] = s.split('-'); return `${parseInt(d)} ${MONTHS_PT[parseInt(m)-1]}`; }
+  const periodStr = `${fmtD(META_PERIOD.since)} – ${fmtD(META_PERIOD.until)} ${META_PERIOD.until.slice(0,4)}`;
+
+  const totS = ADS.reduce((s,a) => s + a.total.spend, 0);
+  const totL = ADS.reduce((s,a) => s + a.total.leads, 0);
+  const totI = ADS.reduce((s,a) => s + a.total.imp, 0);
+  const totLPV = ADS.reduce((s,a) => s + a.total.lpv, 0);
+
+  const withLeads = ADS.filter(a => a.total.leads > 0);
+  const bestAd = withLeads.length ? withLeads.reduce((b,a) => a.total.spend/a.total.leads < b.total.spend/b.total.leads ? a : b) : ADS[0];
+  const bestCPL = bestAd.total.leads > 0 ? bestAd.total.spend / bestAd.total.leads : null;
+  const avgCPL = totL > 0 ? totS / totL : null;
+
+  const fmt = (v, d=2) => v.toFixed(d).replace('.', ',');
+  const fmtEUR = v => v == null ? '—' : `€${fmt(v)}`;
+  const fmtN = v => Math.round(v).toLocaleString('pt-BR');
+  function set(id, val) { const e = document.getElementById(id); if (e) e.innerHTML = val; }
+
+  const now = new Date();
+  const nowStr = `${now.getDate()} ${MONTHS_PT[now.getMonth()]} ${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+  // Sidebar
+  set('sb-period', periodStr);
+  set('sb-invest', `€${fmt(totS)}`);
+  set('sb-leads', fmtN(totL));
+  set('sb-cpl', `€${fmt(avgCPL || 0)}`);
+  set('sb-imp', fmtN(totI));
+  set('footer-updated', nowStr);
+
+  // Topbar date pill
+  set('date-pill', periodStr);
+
+  // KPI cards
+  set('kv-invest', fmtEUR(totS));
+  set('ks-invest', `${ADS.length} criativos · ${META_PERIOD.days} dias`);
+  set('kv-leads', fmtN(totL));
+  set('ks-leads', bestCPL ? `↓ CPL €${fmt(bestCPL)} melhor` : '');
+  set('kv-cpl', fmtEUR(avgCPL));
+  set('ks-cpl', bestAd.shortName + ' lidera');
+  set('kv-imp', fmtN(totI));
+  set('ks-imp', `LPV total: ${fmtN(totLPV)}`);
+  set('kv-vis', fmtN(totLPV));
+  set('kv-cliques', ADS.length);
+  set('ks-cliques', `${withLeads.length} com conversões`);
+
+  // Footer period
+  set('footer-period', periodStr);
+})();
+
+// ═══ SIDEBAR BUILD ════════════════════════════════════════════════════════
+const sbList = document.getElementById('sb-list');
+ADS.forEach(ad => {
+  const t = ad.total;
+  const cpl = t.leads > 0 ? eur(t.spend / t.leads) : '—';
+  const div = document.createElement('div');
+  div.className = 'sb-c';
+  div.onclick = () => document.getElementById('cc-' + ad.id).scrollIntoView({behavior:'smooth'});
+  div.innerHTML = `
+    <div class="sb-c-thumb" style="background:var(--card3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--muted2)">${ad.shortName.slice(0,3)}</div>
+    <div class="sb-c-info">
+      <div class="sb-c-name">${ad.shortName}</div>
+      <div class="sb-c-sub">${eur(t.spend)} · ${t.leads} leads</div>
+    </div>
+    <span class="badge ${ad.badgeClass}">${ad.badge}</span>`;
+  sbList.appendChild(div);
+});
+
+// ═══ GLOBAL CHARTS ════════════════════════════════════════════════════════
+Chart.defaults.color = '#4a7a5a';
+Chart.defaults.font.family = 'Inter';
+
+const CHART_COLORS = ['#00c4a8','#d4a84b','#33d4bc','#e8c06a','#7aaa8a','#f47070','#a0e0d0','#f0c060','#60b0a0','#e09060','#80c0b0'];
+
+// Age chart — grouped bar (top 4 ads with leads)
+const adsWithLeads = ADS.filter(a => a.total.leads > 0).slice(0, 5);
+
+// Build legend
+const ageLegend = document.getElementById('age-legend');
+adsWithLeads.forEach((ad, i) => {
+  const li = document.createElement('div');
+  li.className = 'leg-i';
+  li.innerHTML = `<div class="leg-d" style="background:${CHART_COLORS[i]}"></div>${ad.shortName}`;
+  ageLegend.appendChild(li);
+});
+
+new Chart(document.getElementById('ageChart'), {
+  type: 'bar',
+  data: {
+    labels: AGES,
+    datasets: adsWithLeads.map((ad, i) => ({
+      label: ad.shortName,
+      data: ad.by_age.map(a => a.leads),
+      backgroundColor: CHART_COLORS[i] + 'cc',
+      borderColor: CHART_COLORS[i],
+      borderWidth: 1,
+      borderRadius: 4
+    }))
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    interaction: {mode:'index', intersect:false},
+    plugins: {
+      legend: {display:false},
+      tooltip: {backgroundColor:'#0d1f16', borderColor:'rgba(0,196,168,0.2)', borderWidth:1, padding:12, cornerRadius:8}
+    },
+    scales: {
+      x: {grid:{color:'rgba(0,196,168,0.04)'}, ticks:{font:{size:9}}},
+      y: {grid:{color:'rgba(0,196,168,0.04)'}, ticks:{font:{size:9}, stepSize:1}}
+    }
+  }
+});
+
+// Donut
+const donutAds = ADS.filter(a => a.total.leads > 0);
+new Chart(document.getElementById('donutChart'), {
+  type: 'doughnut',
+  data: {
+    labels: donutAds.map(a => a.shortName),
+    datasets: [{
+      data: donutAds.map(a => a.total.leads),
+      backgroundColor: CHART_COLORS.slice(0, donutAds.length),
+      borderColor: '#0d1f16',
+      borderWidth: 3,
+      hoverOffset: 6
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '65%',
+    plugins: {
+      legend: {position:'bottom', labels:{font:{size:8}, boxWidth:7, padding:8, color:'#4a7a5a'}},
+      tooltip: {backgroundColor:'#0d1f16', borderColor:'rgba(0,196,168,0.2)', borderWidth:1, padding:10, cornerRadius:8}
+    }
+  }
+});
+
+// CPL bar
+const cplAds = ADS.filter(a => a.total.leads > 0);
+new Chart(document.getElementById('cplChart'), {
+  type: 'bar',
+  data: {
+    labels: cplAds.map(a => a.shortName),
+    datasets: [{
+      label: 'CPL (€)',
+      data: cplAds.map(a => +(a.total.spend / a.total.leads).toFixed(2)),
+      backgroundColor: cplAds.map(a => {
+        const cpl = a.total.spend / a.total.leads;
+        return cpl <= 2.5 ? 'rgba(0,196,168,0.75)' : cpl <= 5 ? 'rgba(212,168,75,0.75)' : 'rgba(224,82,82,0.75)';
+      }),
+      borderRadius: 5,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: {display:false},
+      tooltip: {
+        backgroundColor:'#0d1f16', borderColor:'rgba(0,196,168,0.2)', borderWidth:1, padding:10, cornerRadius:8,
+        callbacks: {label: c => `CPL: €${c.parsed.y.toFixed(2)}`}
+      }
+    },
+    scales: {
+      x: {grid:{display:false}, ticks:{font:{size:8}}},
+      y: {grid:{color:'rgba(0,196,168,0.04)'}, ticks:{font:{size:9}, callback: v => '€' + v}}
+    }
+  }
+});
+
+// ═══ CREATIVE CARDS ═══════════════════════════════════════════════════════
+const container = document.getElementById('cc-container');
+
+ADS.forEach((ad, ai) => {
+  const t = ad.total;
+  const cpl  = R(t.leads > 0 ? t.spend / t.leads : null);
+  const cpv  = R(t.lpv > 0 ? t.spend / t.lpv : null);
+
+  const ageRows = ad.by_age.filter(a => a.spend > 0).map(a => {
+    const a_cpl = R(a.leads > 0 ? a.spend / a.leads : null);
+    const a_cpv = R(a.lpv > 0 ? a.spend / a.lpv : null);
+    return `<tr>
+      <td>${a.age}</td>
+      <td>${a.leads || '—'}</td>
+      <td>${cCPL(a_cpl)}</td>
+      <td>${a.lpv || '—'}</td>
+      <td>${a_cpv ? eur(a_cpv) : '—'}</td>
+      <td>${a.imp.toLocaleString('pt-BR')}</td>
+      <td>${eur(a.spend)}</td>
+    </tr>`;
+  }).join('');
+
+  const sparkId = `spk-${ad.id}`;
+
+  const thumbHtml = ad.thumb
+    ? `<img class="cc-thumb" src="${ad.thumb}" onerror="this.style.background='var(--card3)';this.style.display='flex';"/>`
+    : `<div class="cc-thumb" style="display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted2)">${ad.shortName.slice(0,4)}</div>`;
+
+  const html = `
+  <div class="cc" id="cc-${ad.id}">
+    <div class="cc-header">
+      ${thumbHtml}
+      <div class="cc-info">
+        <div class="cc-name">${ad.name} <span class="badge ${ad.badgeClass}" style="font-size:9px;margin-left:6px">${ad.badge}</span></div>
+        <div class="cc-adset">act_615338413578534 · ID ${ad.id}</div>
+        <div class="cc-links">
+          <a class="preview-btn preview-fb" href="${ad.preview}" target="_blank">Ver Prévia →</a>
+        </div>
+      </div>
+      <div class="cc-right-stats">
+        <div class="cc-stat"><div class="cc-stat-v" style="color:var(--g2)">${t.leads}</div><div class="cc-stat-l">Leads</div></div>
+        <div class="cc-stat"><div class="cc-stat-v">${cpl ? eur(cpl) : '—'}</div><div class="cc-stat-l">CPL</div></div>
+        <div class="cc-stat"><div class="cc-stat-v" style="color:var(--p2)">${eur(t.spend)}</div><div class="cc-stat-l">Investido</div></div>
+      </div>
+    </div>
+
+    <!-- METRICS: FUNIL -->
+    <div class="metrics-grid">
+      <div class="m-cell">
+        <div class="m-lbl">LPV</div>
+        <div class="m-val"><b style="color:var(--p2)">${t.lpv}</b></div>
+        <div class="m-sub">Landing Page Views</div>
+      </div>
+      <div class="m-cell">
+        <div class="m-lbl">Custo / LPV</div>
+        <div class="m-val">${cCPV(cpv)}</div>
+        <div class="m-sub">Spend ÷ LPV</div>
+      </div>
+      <div class="m-cell">
+        <div class="m-lbl">CPL</div>
+        <div class="m-val">${cCPL(cpl)}</div>
+        <div class="m-sub">Custo por Lead</div>
+      </div>
+      <div class="m-cell">
+        <div class="m-lbl">Impressões</div>
+        <div class="m-val"><b>${t.imp.toLocaleString('pt-BR')}</b></div>
+        <div class="m-sub">Total no período</div>
+      </div>
+    </div>
+
+    <!-- AGE BREAKDOWN + CHART -->
+    <div class="cc-two">
+      <div class="cc-panel">
+        <div class="cc-panel-title">Breakdown por Faixa Etária</div>
+        <table class="age-table">
+          <thead><tr>
+            <th style="text-align:left">Idade</th>
+            <th>Leads</th>
+            <th>CPL</th>
+            <th>LPV</th>
+            <th>Custo/LPV</th>
+            <th>Impres.</th>
+            <th>Gasto</th>
+          </tr></thead>
+          <tbody>
+            ${ageRows}
+            <tr class="tot">
+              <td>TOTAL</td>
+              <td>${cLeads(t.leads)}</td>
+              <td>${cCPL(cpl)}</td>
+              <td><b>${t.lpv}</b></td>
+              <td>${cCPV(cpv)}</td>
+              <td>${t.imp.toLocaleString('pt-BR')}</td>
+              <td><b style="color:var(--p2)">${eur(t.spend)}</b></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cc-panel">
+        <div class="cc-panel-title">Leads &amp; Gasto por Idade</div>
+        <div style="height:200px"><canvas id="${sparkId}"></canvas></div>
+      </div>
+    </div>
+  </div>`;
+
+  container.insertAdjacentHTML('beforeend', html);
+
+  // Age sparkline chart
+  const ageLabels  = ad.by_age.filter(a => a.spend > 0).map(a => a.age);
+  const ageLeads   = ad.by_age.filter(a => a.spend > 0).map(a => a.leads);
+  const ageSpends  = ad.by_age.filter(a => a.spend > 0).map(a => a.spend);
+  const barColor   = CHART_COLORS[ai % CHART_COLORS.length];
+
+  new Chart(document.getElementById(sparkId), {
+    type: 'bar',
+    data: {
+      labels: ageLabels,
+      datasets: [
+        {
+          label: 'Leads',
+          data: ageLeads,
+          backgroundColor: barColor + 'aa',
+          borderRadius: 5,
+          borderSkipped: false,
+          yAxisID: 'y'
+        },
+        {
+          label: 'Gasto (€)',
+          data: ageSpends,
+          type: 'line',
+          borderColor: 'rgba(212,168,75,0.6)',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          pointRadius: 3,
+          pointBackgroundColor: 'rgba(212,168,75,0.8)',
+          tension: 0.4,
+          yAxisID: 'y2'
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: {mode:'index', intersect:false},
+      plugins: {
+        legend: {display:false},
+        tooltip: {
+          backgroundColor: '#0d1f16',
+          borderColor: 'rgba(0,196,168,0.2)',
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 8,
+          callbacks: {
+            label: c => c.dataset.label + ': ' + (c.dataset.yAxisID === 'y2' ? '€' + c.parsed.y.toFixed(2) : c.parsed.y)
+          }
+        }
+      },
+      scales: {
+        x: {grid:{color:'rgba(0,196,168,0.04)'}, ticks:{font:{size:9}}},
+        y: {grid:{color:'rgba(0,196,168,0.04)'}, ticks:{font:{size:9}, stepSize:1}, position:'left'},
+        y2: {grid:{display:false}, ticks:{font:{size:9}, callback: v => '€' + v.toFixed(0)}, position:'right'}
+      }
+    }
+  });
+});
+
+// Sidebar active state via IntersectionObserver
+const cards   = document.querySelectorAll('.cc');
+const sbItems = document.querySelectorAll('.sb-c');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id.replace('cc-', '');
+      sbItems.forEach((s, i) => { s.classList.toggle('active', ADS[i].id === id); });
+    }
+  });
+}, {threshold: 0.3});
+cards.forEach(c => obs.observe(c));
+
+// ─── Mobile sidebar toggle ───
+const mobBtn  = document.getElementById('mob-toggle');
+const sbEl    = document.querySelector('.sb');
+const overlay = document.getElementById('sb-overlay');
+function openSb()  { sbEl.classList.add('open');    overlay.classList.add('open');    document.body.style.overflow = 'hidden'; }
+function closeSb() { sbEl.classList.remove('open'); overlay.classList.remove('open'); document.body.style.overflow = ''; }
+mobBtn.addEventListener('click', () => sbEl.classList.contains('open') ? closeSb() : openSb());
+overlay.addEventListener('click', closeSb);
+document.querySelectorAll('.sb-nav-item,.sb-c').forEach(el => el.addEventListener('click', () => { if (window.innerWidth <= 700) closeSb(); }));
+</script>
+</body>
+</html>
