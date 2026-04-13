@@ -17,8 +17,8 @@ TOKEN      = os.environ['META_ACCESS_TOKEN']
 ACCOUNT_ID = 'act_615338413578534'
 BASE       = 'https://graph.facebook.com/v19.0'
 CAMPAIGN_FILTER = 'WEBNAR'
-# Start date fixed: Tuesday Apr 7 (webinar week start)
-START_DATE = '2026-04-07'
+# Dynamic: last 30 days
+START_DATE = (datetime.now(timezone.utc).date() - timedelta(days=29)).strftime('%Y-%m-%d')
 
 # ─── HELPERS ─────────────────────────────────────────────────────────────────
 def api_get(url, params=None):
@@ -99,8 +99,9 @@ rows = paginate(f'{BASE}/{ACCOUNT_ID}/insights', {
         'actions','outbound_clicks',
         'video_play_actions','video_thruplay_watched_actions'
     ]),
-    'level':      'ad',
-    'breakdowns': 'age',
+    'level':          'ad',
+    'breakdowns':     'age',
+    'time_increment': '1',
     'time_range': time_range,
     'filtering':  json.dumps([{'field':'campaign.name','operator':'CONTAIN','value':CAMPAIGN_FILTER}]),
     'limit':      500
@@ -116,6 +117,7 @@ AGES_DISPLAY = {'18-24':'18\u201324','25-34':'25\u201334','35-44':'35\u201344',
 def empty(): return {'spend':0.0,'leads':0,'imp':0,'cliques':0,'lpv':0}
 
 ad_data = defaultdict(lambda: {'total': empty(), 'by_age': defaultdict(empty), 'name':''})
+ad_raw  = defaultdict(list)
 
 for row in rows:
     aid   = row['ad_id']
@@ -136,6 +138,10 @@ for row in rows:
         d['imp']     += imp
         d['cliques'] += cliques
         d['lpv']     += lpv
+
+    date_str = row.get('date_start', '')
+    ad_raw[aid].append({'date': date_str, 'age': age, 'spend': round(sp, 2),
+                        'leads': leads, 'imp': imp, 'cliques': cliques, 'lpv': lpv})
 
 # ─── 4. BUILD ADS ARRAY ──────────────────────────────────────────────────────
 def badge(total):
@@ -182,7 +188,8 @@ for i, aid in enumerate(sorted_ids):
         'previewType': 'fb',
         'thumb':       info.get('thumb', ''),
         'total':       total,
-        'by_age':      by_age_list
+        'by_age':      by_age_list,
+        'raw':         ad_raw.get(aid, []),
     })
 
 print(f'Built {len(ADS)} ads')

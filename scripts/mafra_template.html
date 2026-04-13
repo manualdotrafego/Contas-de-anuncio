@@ -80,6 +80,14 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:
 .pill-date{background:var(--card);border:1px solid var(--b1);color:var(--muted2)}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--p2);animation:pulse 1.5s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+/* DATE FILTER */
+.date-filter{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--b1);border-radius:10px;padding:6px 12px}
+.date-filter label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.date-filter input[type=date]{background:transparent;border:none;color:var(--text);font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer;outline:none;color-scheme:dark}
+.date-filter input[type=date]::-webkit-calendar-picker-indicator{filter:invert(0.6) sepia(1) saturate(2) hue-rotate(130deg);cursor:pointer;opacity:.7}
+.df-sep{font-size:10px;color:var(--muted)}
+.df-btn{background:var(--p3);border:1px solid rgba(0,196,168,0.3);color:var(--p2);font-size:10px;font-weight:700;padding:5px 12px;border-radius:7px;cursor:pointer;font-family:'Inter',sans-serif;transition:.15s}
+.df-btn:hover{background:rgba(0,196,168,0.2)}
 
 /* ─── KPI STRIP ─── */
 .kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px}
@@ -263,7 +271,14 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:
       <p>CA - João Mafra Lançamento · Meta Ads · 7 dias</p>
     </div>
     <div class="topbar-r">
-      <div class="pill pill-date" id="date-pill">—</div>
+      <div class="date-filter">
+        <label>De</label>
+        <input type="date" id="dt-from">
+        <span class="df-sep">→</span>
+        <label>Até</label>
+        <input type="date" id="dt-to">
+        <button class="df-btn" onclick="applyFilter()">Aplicar</button>
+      </div>
       <div class="pill pill-live"><span class="dot"></span>LIVE</div>
     </div>
   </div>
@@ -548,57 +563,314 @@ const cLPV    = v => `<b>${v || '—'}</b>`;
 const cLeads  = v => v ? `<b style="color:var(--g2)">${v}</b>` : `<span class="cn">—</span>`;
 const cCPV    = v => chip(v, 3, 6, eur, true);
 
-// ═══ DYNAMIC GLOBALS ══════════════════════════════════════════════════════
-(function() {
-  const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  function fmtD(s) { const [y,m,d] = s.split('-'); return `${parseInt(d)} ${MONTHS_PT[parseInt(m)-1]}`; }
-  const periodStr = `${fmtD(META_PERIOD.since)} – ${fmtD(META_PERIOD.until)} ${META_PERIOD.until.slice(0,4)}`;
+// ═══ FILTER STATE ══════════════════════════════════════════════════════════
+const AGES_RAW    = ['18-24','25-34','35-44','45-54','55-64','65+'];
+const AGES_DISP   = {'18-24':'18\u201324','25-34':'25\u201334','35-44':'35\u201344','45-54':'45\u201354','55-64':'55\u201364','65+':'65+'};
 
-  const totS = ADS.reduce((s,a) => s + a.total.spend, 0);
-  const totL = ADS.reduce((s,a) => s + a.total.leads, 0);
-  const totI = ADS.reduce((s,a) => s + a.total.imp, 0);
-  const totLPV = ADS.reduce((s,a) => s + a.total.lpv, 0);
+// Init date inputs with full period
+const dtFromEl = document.getElementById('dt-from');
+const dtToEl   = document.getElementById('dt-to');
+dtFromEl.value = META_PERIOD.since;
+dtToEl.value   = META_PERIOD.until;
+dtFromEl.min   = META_PERIOD.since;
+dtFromEl.max   = META_PERIOD.until;
+dtToEl.min     = META_PERIOD.since;
+dtToEl.max     = META_PERIOD.until;
 
-  const withLeads = ADS.filter(a => a.total.leads > 0);
-  const bestAd = withLeads.length ? withLeads.reduce((b,a) => a.total.spend/a.total.leads < b.total.spend/b.total.leads ? a : b) : ADS[0];
-  const bestCPL = bestAd.total.leads > 0 ? bestAd.total.spend / bestAd.total.leads : null;
+function applyFilter() {
+  const from = dtFromEl.value;
+  const to   = dtToEl.value;
+  if (!from || !to || from > to) return;
+  renderDashboard(from, to);
+}
+
+// ═══ FILTER ENGINE ═════════════════════════════════════════════════════════
+function filteredADS(from, to) {
+  return ADS.map(ad => {
+    if (!ad.raw || ad.raw.length === 0) {
+      // fallback: use pre-computed totals
+      return {...ad};
+    }
+    const subset = ad.raw.filter(r => r.date >= from && r.date <= to);
+    const total  = {spend:0, leads:0, imp:0, cliques:0, lpv:0};
+    const ageMap = {};
+    AGES_RAW.forEach(a => ageMap[a] = {spend:0, leads:0, imp:0, cliques:0, lpv:0, age: AGES_DISP[a]});
+    for (const r of subset) {
+      total.spend   += r.spend;
+      total.leads   += r.leads;
+      total.imp     += r.imp;
+      total.cliques += r.cliques;
+      total.lpv     += r.lpv;
+      const ak = r.age;
+      if (ageMap[ak]) {
+        ageMap[ak].spend   += r.spend;
+        ageMap[ak].leads   += r.leads;
+        ageMap[ak].imp     += r.imp;
+        ageMap[ak].cliques += r.cliques;
+        ageMap[ak].lpv     += r.lpv;
+      }
+    }
+    total.spend = Math.round(total.spend * 100) / 100;
+    const by_age = AGES_RAW.map(a => ({...ageMap[a], spend: Math.round(ageMap[a].spend*100)/100}));
+    return {...ad, total, by_age};
+  }).filter(ad => ad.total.spend > 0 || ad.total.leads > 0)
+    .sort((a,b) => b.total.spend - a.total.spend);
+}
+
+// ═══ CHART INSTANCES ═══════════════════════════════════════════════════════
+let chartAge = null, chartDonut = null, chartCPL = null;
+
+// ═══ RENDER ════════════════════════════════════════════════════════════════
+function renderDashboard(from, to) {
+  const fADS = filteredADS(from, to);
+  const days  = Math.round((new Date(to) - new Date(from)) / 86400000) + 1;
+  const periodStr = `${from} \u2192 ${to} (${days}d)`;
+
+  // ── KPIs ──────────────────────────────────────────────────────────────
+  const totS  = fADS.reduce((s,a) => s + a.total.spend, 0);
+  const totL  = fADS.reduce((s,a) => s + a.total.leads, 0);
+  const totI  = fADS.reduce((s,a) => s + a.total.imp,   0);
+  const totV  = fADS.reduce((s,a) => s + a.total.lpv,   0);
+  const totC  = fADS.reduce((s,a) => s + a.total.cliques, 0);
   const avgCPL = totL > 0 ? totS / totL : null;
+  const withLeads = fADS.filter(a => a.total.leads > 0);
+  const activeON  = ADS.filter(a => a.status === 'ON').length;
 
-  const fmt = (v, d=2) => v.toFixed(d).replace('.', ',');
-  const fmtEUR = v => v == null ? '—' : `€${fmt(v)}`;
-  const fmtN = v => Math.round(v).toLocaleString('pt-BR');
-  function set(id, val) { const e = document.getElementById(id); if (e) e.innerHTML = val; }
-
-  const now = new Date();
-  const nowStr = `${now.getDate()} ${MONTHS_PT[now.getMonth()]} ${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-
-  // Sidebar
-  set('sb-period', periodStr);
-  set('sb-invest', `€${fmt(totS)}`);
-  set('sb-leads', fmtN(totL));
-  set('sb-cpl', `€${fmt(avgCPL || 0)}`);
-  set('sb-imp', fmtN(totI));
-  set('footer-updated', nowStr);
-
-  // Topbar date pill
-  set('date-pill', periodStr);
-
-  // KPI cards
-  set('kv-invest', fmtEUR(totS));
-  set('ks-invest', `${ADS.length} criativos · ${META_PERIOD.days} dias`);
-  set('kv-leads', fmtN(totL));
-  set('ks-leads', bestCPL ? `↓ CPL €${fmt(bestCPL)} melhor` : '');
-  set('kv-cpl', fmtEUR(avgCPL));
-  set('ks-cpl', bestAd.shortName + ' lidera');
-  set('kv-imp', fmtN(totI));
-  set('ks-imp', `LPV total: ${fmtN(totLPV)}`);
-  set('kv-vis', fmtN(totLPV));
-  set('kv-cliques', ADS.length);
-  set('ks-cliques', `${withLeads.length} com conversões`);
-
-  // Footer period
+  const set = (id, val) => { const e = document.getElementById(id); if (e) e.innerHTML = val; };
+  set('kv-invest',  eur(totS));
+  set('ks-invest',  `${fADS.length} criativos \u00b7 ${periodStr}`);
+  set('kv-leads',   totL);
+  set('ks-leads',   withLeads.length > 0 ? `Melhor: ${eur(Math.min(...withLeads.map(a => a.total.spend/a.total.leads)))} CPL` : '\u2014');
+  set('kv-cpl',     avgCPL ? eur(avgCPL) : '\u2014');
+  set('ks-cpl',     `Meta \u2264 \u20ac3`);
+  set('kv-imp',     totI.toLocaleString('pt-BR'));
+  set('ks-imp',     `${fADS.length} ads`);
+  set('kv-vis',     totV);
+  set('kv-cliques', activeON);
+  set('ks-cliques', `${ADS.length - activeON} pausados`);
+  set('sb-invest',  eur(totS));
+  set('sb-leads',   totL);
+  set('sb-cpl',     avgCPL ? eur(avgCPL) : '\u2014');
+  set('sb-imp',     totI.toLocaleString('pt-BR'));
+  set('sb-period',  `${from} \u2192 ${to}`);
   set('footer-period', periodStr);
-})();
+  set('footer-updated', new Date().toLocaleString('pt-BR', {timeZone:'UTC'}) + ' UTC');
+
+  // ── CHARTS ────────────────────────────────────────────────────────────
+  if (chartAge)   { chartAge.destroy();   chartAge   = null; }
+  if (chartDonut) { chartDonut.destroy(); chartDonut = null; }
+  if (chartCPL)   { chartCPL.destroy();   chartCPL   = null; }
+
+  Chart.defaults.color = '#4a7a5a';
+  Chart.defaults.font.family = 'Inter';
+
+  const COLORS = ['#00c4a8','#d4a84b','#33d4bc','#e8c06a','#7aaa8a','#f47070','#a0e0d0','#f0c060','#60b0a0','#e09060','#80c0b0'];
+  const adsWithLeads = fADS.filter(a => a.total.leads > 0).slice(0, 5);
+
+  // Rebuild age legend
+  const ageLegend = document.getElementById('age-legend');
+  ageLegend.innerHTML = '';
+  adsWithLeads.forEach((ad, i) => {
+    const li = document.createElement('div');
+    li.className = 'leg-i';
+    li.innerHTML = `<div class="leg-d" style="background:${COLORS[i]}"></div>${ad.shortName}`;
+    ageLegend.appendChild(li);
+  });
+
+  chartAge = new Chart(document.getElementById('ageChart'), {
+    type: 'bar',
+    data: {
+      labels: AGES,
+      datasets: adsWithLeads.map((ad, i) => ({
+        label: ad.shortName,
+        data: ad.by_age.map(a => a.leads),
+        backgroundColor: COLORS[i] + 'cc', borderColor: COLORS[i], borderWidth:1, borderRadius:4
+      }))
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{backgroundColor:'#0d1f16',borderColor:'rgba(0,196,168,0.2)',borderWidth:1,padding:12,cornerRadius:8}
+      },
+      scales:{
+        x:{grid:{color:'rgba(0,196,168,0.04)'},ticks:{font:{size:9}}},
+        y:{grid:{color:'rgba(0,196,168,0.04)'},ticks:{font:{size:9},stepSize:1}}
+      }
+    }
+  });
+
+  const donutAds = fADS.filter(a => a.total.leads > 0);
+  chartDonut = new Chart(document.getElementById('donutChart'), {
+    type:'doughnut',
+    data:{
+      labels: donutAds.map(a => a.shortName),
+      datasets:[{data: donutAds.map(a => a.total.leads), backgroundColor: COLORS.slice(0,donutAds.length), borderColor:'#0d1f16', borderWidth:3, hoverOffset:6}]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'65%',
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:8},boxWidth:7,padding:8,color:'#4a7a5a'}},
+        tooltip:{backgroundColor:'#0d1f16',borderColor:'rgba(0,196,168,0.2)',borderWidth:1,padding:10,cornerRadius:8}
+      }
+    }
+  });
+
+  const cplAds = fADS.filter(a => a.total.leads > 0);
+  chartCPL = new Chart(document.getElementById('cplChart'), {
+    type:'bar',
+    data:{
+      labels: cplAds.map(a => a.shortName),
+      datasets:[{
+        label:'CPL (\u20ac)',
+        data: cplAds.map(a => +(a.total.spend / a.total.leads).toFixed(2)),
+        backgroundColor: cplAds.map(a => {
+          const c = a.total.spend/a.total.leads;
+          return c<=3?'rgba(0,196,168,0.7)':c<=6?'rgba(212,168,75,0.7)':'rgba(224,82,82,0.7)';
+        }),
+        borderColor: cplAds.map(a => {
+          const c = a.total.spend/a.total.leads;
+          return c<=3?'#00c4a8':c<=6?'#d4a84b':'#e05252';
+        }),
+        borderWidth:1, borderRadius:5
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins:{
+        legend:{display:false},
+        tooltip:{backgroundColor:'#0d1f16',borderColor:'rgba(0,196,168,0.2)',borderWidth:1,padding:10,cornerRadius:8}
+      },
+      scales:{
+        x:{grid:{color:'rgba(0,196,168,0.04)'},ticks:{font:{size:9},callback:v=>'\u20ac'+v}},
+        y:{grid:{display:false},ticks:{font:{size:9}}}
+      }
+    }
+  });
+
+  // ── CARDS ─────────────────────────────────────────────────────────────
+  const container = document.getElementById('cc-container');
+  container.innerHTML = '';
+
+  fADS.forEach((ad, ai) => {
+    const t    = ad.total;
+    const cpl  = R(t.leads > 0 ? t.spend / t.leads : null);
+    const cpv  = R(t.lpv   > 0 ? t.spend / t.lpv   : null);
+    const stOn = ad.status === 'ON';
+    const stBadgeHtml = `<span class="st-badge ${stOn?'st-on':'st-off'}"><span class="st-dot"></span>${stOn?'ON':'OFF'}</span>`;
+
+    const ageRows = ad.by_age.filter(a => a.spend > 0).map(a => {
+      const a_cpl = R(a.leads > 0 ? a.spend / a.leads : null);
+      const a_cpv = R(a.lpv   > 0 ? a.spend / a.lpv   : null);
+      return `<tr>
+        <td>${a.age}</td>
+        <td>${a.leads || '\u2014'}</td>
+        <td>${cCPL(a_cpl)}</td>
+        <td>${a.lpv || '\u2014'}</td>
+        <td>${a_cpv ? eur(a_cpv) : '\u2014'}</td>
+        <td>${a.imp.toLocaleString('pt-BR')}</td>
+        <td>${eur(a.spend)}</td>
+      </tr>`;
+    }).join('');
+
+    const thumbHtml = ad.thumb
+      ? `<img class="cc-thumb" src="${ad.thumb}" onerror="this.style.background='var(--card3)';this.style.display='flex';"/>`
+      : `<div class="cc-thumb" style="display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted2)">${ad.shortName.slice(0,4)}</div>`;
+
+    const sparkId = `spk-${ad.id}`;
+
+    const html = `
+    <div class="cc" id="cc-${ad.id}">
+      <div class="cc-header">
+        ${thumbHtml}
+        <div class="cc-info">
+          <div class="cc-name">${ad.name} <span class="badge ${ad.badgeClass}" style="font-size:9px;margin-left:6px">${ad.badge}</span> ${stBadgeHtml}</div>
+          <div class="cc-adset">act_615338413578534 \u00b7 ID ${ad.id}</div>
+          <div class="cc-links">
+            <a class="preview-btn preview-fb" href="${ad.preview}" target="_blank">Ver Pr\u00e9via \u2192</a>
+          </div>
+        </div>
+        <div class="cc-right-stats">
+          <div class="cc-stat"><div class="cc-stat-v" style="color:var(--g2)">${t.leads}</div><div class="cc-stat-l">Leads</div></div>
+          <div class="cc-stat"><div class="cc-stat-v">${cpl ? eur(cpl) : '\u2014'}</div><div class="cc-stat-l">CPL</div></div>
+          <div class="cc-stat"><div class="cc-stat-v" style="color:var(--p2)">${eur(t.spend)}</div><div class="cc-stat-l">Investido</div></div>
+        </div>
+      </div>
+      <div class="metrics-grid">
+        <div class="m-cell"><div class="m-lbl">LPV</div><div class="m-val"><b style="color:var(--p2)">${t.lpv}</b></div><div class="m-sub">Landing Page Views</div></div>
+        <div class="m-cell"><div class="m-lbl">Custo / LPV</div><div class="m-val">${cCPV(cpv)}</div><div class="m-sub">Spend \u00f7 LPV</div></div>
+        <div class="m-cell"><div class="m-lbl">CPL</div><div class="m-val">${cCPL(cpl)}</div><div class="m-sub">Custo por Lead</div></div>
+        <div class="m-cell"><div class="m-lbl">Impress\u00f5es</div><div class="m-val"><b>${t.imp.toLocaleString('pt-BR')}</b></div><div class="m-sub">Total no per\u00edodo</div></div>
+      </div>
+      <div class="cc-two">
+        <div class="cc-panel">
+          <div class="cc-panel-title">Breakdown por Faixa Et\u00e1ria</div>
+          <table class="age-table">
+            <thead><tr>
+              <th style="text-align:left">Idade</th>
+              <th>Leads</th><th>CPL</th><th>LPV</th><th>CPV</th><th>Impr.</th><th>Spend</th>
+            </tr></thead>
+            <tbody>${ageRows}</tbody>
+            <tfoot><tr class="tot">
+              <td>TOTAL</td>
+              <td>${t.leads}</td>
+              <td>${cpl ? eur(cpl) : '\u2014'}</td>
+              <td>${t.lpv}</td>
+              <td>${cpv ? eur(cpv) : '\u2014'}</td>
+              <td>${t.imp.toLocaleString('pt-BR')}</td>
+              <td>${eur(t.spend)}</td>
+            </tr></tfoot>
+          </table>
+        </div>
+        <div class="cc-panel">
+          <div class="cc-panel-title">Leads por Faixa Et\u00e1ria</div>
+          <div style="height:180px"><canvas id="${sparkId}"></canvas></div>
+        </div>
+      </div>
+    </div>`;
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = html;
+    container.appendChild(wrapper.firstElementChild);
+
+    // Spark chart
+    const ageData = ad.by_age.filter(a => a.spend > 0);
+    if (ageData.some(a => a.leads > 0)) {
+      new Chart(document.getElementById(sparkId), {
+        type:'bar',
+        data:{
+          labels: ageData.map(a => a.age),
+          datasets:[{
+            label:'Leads',
+            data: ageData.map(a => a.leads),
+            backgroundColor:'rgba(0,196,168,0.6)', borderColor:'#00c4a8', borderWidth:1, borderRadius:3
+          },{
+            label:'Spend (\u20ac)',
+            data: ageData.map(a => a.spend),
+            backgroundColor:'rgba(212,168,75,0.5)', borderColor:'#d4a84b', borderWidth:1, borderRadius:3,
+            yAxisID:'y2'
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{
+            legend:{position:'bottom',labels:{font:{size:8},boxWidth:7,padding:6,color:'#4a7a5a'}},
+            tooltip:{backgroundColor:'#0d1f16',borderColor:'rgba(0,196,168,0.2)',borderWidth:1,padding:8,cornerRadius:6}
+          },
+          scales:{
+            x:{grid:{display:false},ticks:{font:{size:8}}},
+            y:{grid:{color:'rgba(0,196,168,0.04)'},ticks:{font:{size:8},stepSize:1},title:{display:true,text:'Leads',font:{size:8},color:'#4a7a5a'}},
+            y2:{position:'right',grid:{display:false},ticks:{font:{size:8},callback:v=>'\u20ac'+v},title:{display:true,text:'Spend',font:{size:8},color:'#4a7a5a'}}
+          }
+        }
+      });
+    }
+  });
+}
+
+// ═══ INITIAL RENDER ════════════════════════════════════════════════════════
+renderDashboard(META_PERIOD.since, META_PERIOD.until);
 
 // ═══ SIDEBAR BUILD ════════════════════════════════════════════════════════
 const sbList = document.getElementById('sb-list');
@@ -619,295 +891,13 @@ ADS.forEach(ad => {
   sbList.appendChild(div);
 });
 
-// ═══ GLOBAL CHARTS ════════════════════════════════════════════════════════
-Chart.defaults.color = '#4a7a5a';
-Chart.defaults.font.family = 'Inter';
-
-const CHART_COLORS = ['#00c4a8','#d4a84b','#33d4bc','#e8c06a','#7aaa8a','#f47070','#a0e0d0','#f0c060','#60b0a0','#e09060','#80c0b0'];
-
-// Age chart — grouped bar (top 4 ads with leads)
-const adsWithLeads = ADS.filter(a => a.total.leads > 0).slice(0, 5);
-
-// Build legend
-const ageLegend = document.getElementById('age-legend');
-adsWithLeads.forEach((ad, i) => {
-  const li = document.createElement('div');
-  li.className = 'leg-i';
-  li.innerHTML = `<div class="leg-d" style="background:${CHART_COLORS[i]}"></div>${ad.shortName}`;
-  ageLegend.appendChild(li);
-});
-
-new Chart(document.getElementById('ageChart'), {
-  type: 'bar',
-  data: {
-    labels: AGES,
-    datasets: adsWithLeads.map((ad, i) => ({
-      label: ad.shortName,
-      data: ad.by_age.map(a => a.leads),
-      backgroundColor: CHART_COLORS[i] + 'cc',
-      borderColor: CHART_COLORS[i],
-      borderWidth: 1,
-      borderRadius: 4
-    }))
-  },
-  options: {
-    responsive: true, maintainAspectRatio: false,
-    interaction: {mode:'index', intersect:false},
-    plugins: {
-      legend: {display:false},
-      tooltip: {backgroundColor:'#0d1f16', borderColor:'rgba(0,196,168,0.2)', borderWidth:1, padding:12, cornerRadius:8}
-    },
-    scales: {
-      x: {grid:{color:'rgba(0,196,168,0.04)'}, ticks:{font:{size:9}}},
-      y: {grid:{color:'rgba(0,196,168,0.04)'}, ticks:{font:{size:9}, stepSize:1}}
-    }
-  }
-});
-
-// Donut
-const donutAds = ADS.filter(a => a.total.leads > 0);
-new Chart(document.getElementById('donutChart'), {
-  type: 'doughnut',
-  data: {
-    labels: donutAds.map(a => a.shortName),
-    datasets: [{
-      data: donutAds.map(a => a.total.leads),
-      backgroundColor: CHART_COLORS.slice(0, donutAds.length),
-      borderColor: '#0d1f16',
-      borderWidth: 3,
-      hoverOffset: 6
-    }]
-  },
-  options: {
-    responsive: true, maintainAspectRatio: false, cutout: '65%',
-    plugins: {
-      legend: {position:'bottom', labels:{font:{size:8}, boxWidth:7, padding:8, color:'#4a7a5a'}},
-      tooltip: {backgroundColor:'#0d1f16', borderColor:'rgba(0,196,168,0.2)', borderWidth:1, padding:10, cornerRadius:8}
-    }
-  }
-});
-
-// CPL bar
-const cplAds = ADS.filter(a => a.total.leads > 0);
-new Chart(document.getElementById('cplChart'), {
-  type: 'bar',
-  data: {
-    labels: cplAds.map(a => a.shortName),
-    datasets: [{
-      label: 'CPL (€)',
-      data: cplAds.map(a => +(a.total.spend / a.total.leads).toFixed(2)),
-      backgroundColor: cplAds.map(a => {
-        const cpl = a.total.spend / a.total.leads;
-        return cpl <= 2.5 ? 'rgba(0,196,168,0.75)' : cpl <= 5 ? 'rgba(212,168,75,0.75)' : 'rgba(224,82,82,0.75)';
-      }),
-      borderRadius: 5,
-      borderSkipped: false
-    }]
-  },
-  options: {
-    responsive: true, maintainAspectRatio: false,
-    plugins: {
-      legend: {display:false},
-      tooltip: {
-        backgroundColor:'#0d1f16', borderColor:'rgba(0,196,168,0.2)', borderWidth:1, padding:10, cornerRadius:8,
-        callbacks: {label: c => `CPL: €${c.parsed.y.toFixed(2)}`}
-      }
-    },
-    scales: {
-      x: {grid:{display:false}, ticks:{font:{size:8}}},
-      y: {grid:{color:'rgba(0,196,168,0.04)'}, ticks:{font:{size:9}, callback: v => '€' + v}}
-    }
-  }
-});
-
-// ═══ CREATIVE CARDS ═══════════════════════════════════════════════════════
-const container = document.getElementById('cc-container');
-
-ADS.forEach((ad, ai) => {
-  const t = ad.total;
-  const cpl  = R(t.leads > 0 ? t.spend / t.leads : null);
-  const cpv  = R(t.lpv > 0 ? t.spend / t.lpv : null);
-
-  const ageRows = ad.by_age.filter(a => a.spend > 0).map(a => {
-    const a_cpl = R(a.leads > 0 ? a.spend / a.leads : null);
-    const a_cpv = R(a.lpv > 0 ? a.spend / a.lpv : null);
-    return `<tr>
-      <td>${a.age}</td>
-      <td>${a.leads || '—'}</td>
-      <td>${cCPL(a_cpl)}</td>
-      <td>${a.lpv || '—'}</td>
-      <td>${a_cpv ? eur(a_cpv) : '—'}</td>
-      <td>${a.imp.toLocaleString('pt-BR')}</td>
-      <td>${eur(a.spend)}</td>
-    </tr>`;
-  }).join('');
-
-  const sparkId = `spk-${ad.id}`;
-
-  const thumbHtml = ad.thumb
-    ? `<img class="cc-thumb" src="${ad.thumb}" onerror="this.style.background='var(--card3)';this.style.display='flex';"/>`
-    : `<div class="cc-thumb" style="display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted2)">${ad.shortName.slice(0,4)}</div>`;
-
-  const stOn = ad.status === 'ON';
-  const stBadgeHtml = `<span class="st-badge ${stOn?'st-on':'st-off'}"><span class="st-dot"></span>${stOn?'ON':'OFF'}</span>`;
-  const html = `
-  <div class="cc" id="cc-${ad.id}">
-    <div class="cc-header">
-      ${thumbHtml}
-      <div class="cc-info">
-        <div class="cc-name">${ad.name} <span class="badge ${ad.badgeClass}" style="font-size:9px;margin-left:6px">${ad.badge}</span> ${stBadgeHtml}</div>
-        <div class="cc-adset">act_615338413578534 · ID ${ad.id}</div>
-        <div class="cc-links">
-          <a class="preview-btn preview-fb" href="${ad.preview}" target="_blank">Ver Prévia →</a>
-        </div>
-      </div>
-      <div class="cc-right-stats">
-        <div class="cc-stat"><div class="cc-stat-v" style="color:var(--g2)">${t.leads}</div><div class="cc-stat-l">Leads</div></div>
-        <div class="cc-stat"><div class="cc-stat-v">${cpl ? eur(cpl) : '—'}</div><div class="cc-stat-l">CPL</div></div>
-        <div class="cc-stat"><div class="cc-stat-v" style="color:var(--p2)">${eur(t.spend)}</div><div class="cc-stat-l">Investido</div></div>
-      </div>
-    </div>
-
-    <!-- METRICS: FUNIL -->
-    <div class="metrics-grid">
-      <div class="m-cell">
-        <div class="m-lbl">LPV</div>
-        <div class="m-val"><b style="color:var(--p2)">${t.lpv}</b></div>
-        <div class="m-sub">Landing Page Views</div>
-      </div>
-      <div class="m-cell">
-        <div class="m-lbl">Custo / LPV</div>
-        <div class="m-val">${cCPV(cpv)}</div>
-        <div class="m-sub">Spend ÷ LPV</div>
-      </div>
-      <div class="m-cell">
-        <div class="m-lbl">CPL</div>
-        <div class="m-val">${cCPL(cpl)}</div>
-        <div class="m-sub">Custo por Lead</div>
-      </div>
-      <div class="m-cell">
-        <div class="m-lbl">Impressões</div>
-        <div class="m-val"><b>${t.imp.toLocaleString('pt-BR')}</b></div>
-        <div class="m-sub">Total no período</div>
-      </div>
-    </div>
-
-    <!-- AGE BREAKDOWN + CHART -->
-    <div class="cc-two">
-      <div class="cc-panel">
-        <div class="cc-panel-title">Breakdown por Faixa Etária</div>
-        <table class="age-table">
-          <thead><tr>
-            <th style="text-align:left">Idade</th>
-            <th>Leads</th>
-            <th>CPL</th>
-            <th>LPV</th>
-            <th>Custo/LPV</th>
-            <th>Impres.</th>
-            <th>Gasto</th>
-          </tr></thead>
-          <tbody>
-            ${ageRows}
-            <tr class="tot">
-              <td>TOTAL</td>
-              <td>${cLeads(t.leads)}</td>
-              <td>${cCPL(cpl)}</td>
-              <td><b>${t.lpv}</b></td>
-              <td>${cCPV(cpv)}</td>
-              <td>${t.imp.toLocaleString('pt-BR')}</td>
-              <td><b style="color:var(--p2)">${eur(t.spend)}</b></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="cc-panel">
-        <div class="cc-panel-title">Leads &amp; Gasto por Idade</div>
-        <div style="height:200px"><canvas id="${sparkId}"></canvas></div>
-      </div>
-    </div>
-  </div>`;
-
-  container.insertAdjacentHTML('beforeend', html);
-
-  // Age sparkline chart
-  const ageLabels  = ad.by_age.filter(a => a.spend > 0).map(a => a.age);
-  const ageLeads   = ad.by_age.filter(a => a.spend > 0).map(a => a.leads);
-  const ageSpends  = ad.by_age.filter(a => a.spend > 0).map(a => a.spend);
-  const barColor   = CHART_COLORS[ai % CHART_COLORS.length];
-
-  new Chart(document.getElementById(sparkId), {
-    type: 'bar',
-    data: {
-      labels: ageLabels,
-      datasets: [
-        {
-          label: 'Leads',
-          data: ageLeads,
-          backgroundColor: barColor + 'aa',
-          borderRadius: 5,
-          borderSkipped: false,
-          yAxisID: 'y'
-        },
-        {
-          label: 'Gasto (€)',
-          data: ageSpends,
-          type: 'line',
-          borderColor: 'rgba(212,168,75,0.6)',
-          backgroundColor: 'transparent',
-          borderWidth: 1.5,
-          pointRadius: 3,
-          pointBackgroundColor: 'rgba(212,168,75,0.8)',
-          tension: 0.4,
-          yAxisID: 'y2'
-        }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: {mode:'index', intersect:false},
-      plugins: {
-        legend: {display:false},
-        tooltip: {
-          backgroundColor: '#0d1f16',
-          borderColor: 'rgba(0,196,168,0.2)',
-          borderWidth: 1,
-          padding: 10,
-          cornerRadius: 8,
-          callbacks: {
-            label: c => c.dataset.label + ': ' + (c.dataset.yAxisID === 'y2' ? '€' + c.parsed.y.toFixed(2) : c.parsed.y)
-          }
-        }
-      },
-      scales: {
-        x: {grid:{color:'rgba(0,196,168,0.04)'}, ticks:{font:{size:9}}},
-        y: {grid:{color:'rgba(0,196,168,0.04)'}, ticks:{font:{size:9}, stepSize:1}, position:'left'},
-        y2: {grid:{display:false}, ticks:{font:{size:9}, callback: v => '€' + v.toFixed(0)}, position:'right'}
-      }
-    }
-  });
-});
-
-// Sidebar active state via IntersectionObserver
-const cards   = document.querySelectorAll('.cc');
-const sbItems = document.querySelectorAll('.sb-c');
-const obs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      const id = e.target.id.replace('cc-', '');
-      sbItems.forEach((s, i) => { s.classList.toggle('active', ADS[i].id === id); });
-    }
-  });
-}, {threshold: 0.3});
-cards.forEach(c => obs.observe(c));
-
-// ─── Mobile sidebar toggle ───
-const mobBtn  = document.getElementById('mob-toggle');
-const sbEl    = document.querySelector('.sb');
-const overlay = document.getElementById('sb-overlay');
-function openSb()  { sbEl.classList.add('open');    overlay.classList.add('open');    document.body.style.overflow = 'hidden'; }
-function closeSb() { sbEl.classList.remove('open'); overlay.classList.remove('open'); document.body.style.overflow = ''; }
-mobBtn.addEventListener('click', () => sbEl.classList.contains('open') ? closeSb() : openSb());
-overlay.addEventListener('click', closeSb);
+// Mobile menu
+const mobBtn = document.getElementById('mob-toggle');
+const sbEl   = document.querySelector('.sb');
+const overlay= document.getElementById('sb-overlay');
+function openSb(){sbEl.classList.add('open');overlay.classList.add('open');document.body.style.overflow='hidden'}
+function closeSb(){sbEl.classList.remove('open');overlay.classList.remove('open');document.body.style.overflow=''}
+if(mobBtn){mobBtn.addEventListener('click',()=>sbEl.classList.contains('open')?closeSb():openSb());overlay.addEventListener('click',closeSb);}
 document.querySelectorAll('.sb-nav-item,.sb-c').forEach(el => el.addEventListener('click', () => { if (window.innerWidth <= 700) closeSb(); }));
 </script>
 </body>
