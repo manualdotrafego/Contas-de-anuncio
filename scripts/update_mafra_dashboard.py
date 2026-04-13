@@ -17,8 +17,8 @@ TOKEN      = os.environ['META_ACCESS_TOKEN']
 ACCOUNT_ID = 'act_615338413578534'
 BASE       = 'https://graph.facebook.com/v19.0'
 CAMPAIGN_FILTER = 'WEBNAR'
-# Dynamic: last 30 days
-START_DATE = (datetime.now(timezone.utc).date() - timedelta(days=29)).strftime('%Y-%m-%d')
+# Fixed start — acumula todos os dias desde o início das campanhas
+START_DATE = '2026-03-01'
 
 # ─── HELPERS ─────────────────────────────────────────────────────────────────
 def api_get(url, params=None):
