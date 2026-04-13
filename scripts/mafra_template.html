@@ -58,6 +58,13 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:
 .by{background:rgba(0,196,168,0.12);color:var(--p2);border:1px solid rgba(0,196,168,0.25)}
 .br{background:rgba(224,82,82,0.12);color:var(--r2);border:1px solid rgba(224,82,82,0.25)}
 .bn{background:var(--card2);color:var(--muted2);border:1px solid var(--b1)}
+/* STATUS */
+.st-badge{display:inline-flex;align-items:center;gap:4px;font-size:8px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap;flex-shrink:0}
+.st-on{background:rgba(0,196,168,0.13);color:#33d4bc;border:1px solid rgba(0,196,168,0.3)}
+.st-off{background:rgba(224,82,82,0.11);color:#f47070;border:1px solid rgba(224,82,82,0.25)}
+.st-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.st-on .st-dot{background:#33d4bc;box-shadow:0 0 4px #33d4bc}
+.st-off .st-dot{background:#f47070}
 .sb-footer{margin-top:auto;padding:14px 18px;border-top:1px solid var(--b1)}
 .sb-footer-text{font-size:9px;color:var(--muted);line-height:1.8}
 
@@ -601,10 +608,11 @@ ADS.forEach(ad => {
   const div = document.createElement('div');
   div.className = 'sb-c';
   div.onclick = () => document.getElementById('cc-' + ad.id).scrollIntoView({behavior:'smooth'});
+  const stOnSb = ad.status === 'ON';
   div.innerHTML = `
     <div class="sb-c-thumb" style="background:var(--card3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--muted2)">${ad.shortName.slice(0,3)}</div>
     <div class="sb-c-info">
-      <div class="sb-c-name">${ad.shortName}</div>
+      <div class="sb-c-name">${ad.shortName} <span class="st-badge ${stOnSb?'st-on':'st-off'}" style="font-size:7px;padding:1px 5px;margin-left:3px"><span class="st-dot"></span>${stOnSb?'ON':'OFF'}</span></div>
       <div class="sb-c-sub">${eur(t.spend)} · ${t.leads} leads</div>
     </div>
     <span class="badge ${ad.badgeClass}">${ad.badge}</span>`;
@@ -740,12 +748,14 @@ ADS.forEach((ad, ai) => {
     ? `<img class="cc-thumb" src="${ad.thumb}" onerror="this.style.background='var(--card3)';this.style.display='flex';"/>`
     : `<div class="cc-thumb" style="display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted2)">${ad.shortName.slice(0,4)}</div>`;
 
+  const stOn = ad.status === 'ON';
+  const stBadgeHtml = `<span class="st-badge ${stOn?'st-on':'st-off'}"><span class="st-dot"></span>${stOn?'ON':'OFF'}</span>`;
   const html = `
   <div class="cc" id="cc-${ad.id}">
     <div class="cc-header">
       ${thumbHtml}
       <div class="cc-info">
-        <div class="cc-name">${ad.name} <span class="badge ${ad.badgeClass}" style="font-size:9px;margin-left:6px">${ad.badge}</span></div>
+        <div class="cc-name">${ad.name} <span class="badge ${ad.badgeClass}" style="font-size:9px;margin-left:6px">${ad.badge}</span> ${stBadgeHtml}</div>
         <div class="cc-adset">act_615338413578534 · ID ${ad.id}</div>
         <div class="cc-links">
           <a class="preview-btn preview-fb" href="${ad.preview}" target="_blank">Ver Prévia →</a>

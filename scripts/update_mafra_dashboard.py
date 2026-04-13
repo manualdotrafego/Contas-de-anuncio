@@ -65,14 +65,16 @@ print(f'  {len(webnar_camps)} campanhas WEBNAR')
 ad_meta = {}
 for camp in webnar_camps:
     ads = paginate(f'{BASE}/{camp["id"]}/ads', {
-        'fields': 'id,name,creative{id,thumbnail_url}',
+        'fields': 'id,name,effective_status,creative{id,thumbnail_url}',
         'limit': 100
     })
     for a in ads:
         cr = a.get('creative', {})
+        eff = a.get('effective_status', 'UNKNOWN')
         ad_meta[a['id']] = {
-            'name':  a['name'],
-            'thumb': cr.get('thumbnail_url', ''),
+            'name':   a['name'],
+            'thumb':  cr.get('thumbnail_url', ''),
+            'status': 'ON' if eff == 'ACTIVE' else 'OFF',
         }
 
 print(f'  {len(ad_meta)} anúncios encontrados')
@@ -173,6 +175,7 @@ for i, aid in enumerate(sorted_ids):
         'key':         f'ad{i}',
         'badge':       bdg,
         'badgeClass':  bclass,
+        'status':      info.get('status', 'OFF'),
         'name':        name,
         'shortName':   short,
         'preview':     info.get('preview', ''),
