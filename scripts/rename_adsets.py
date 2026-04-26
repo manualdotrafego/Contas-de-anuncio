@@ -38,13 +38,20 @@ adsets = paginate(f"{BASE}/{ACCT}/adsets", {
     'limit': 100
 })
 
-# Filtra VALIDAÇÃO CRIATIVO
-targets = [a for a in adsets if 'VALIDAÇÃO CRIATIVO' in a['name'] or 'VALIDACAO CRIATIVO' in a['name'].upper()]
+print(f"\nTODOS os ad sets na conta ({len(adsets)} total):")
+for a in sorted(adsets, key=lambda x: x.get('created_time','')):
+    print(f"  [{a.get('effective_status','?')[:6]}] {repr(a['name'][:80])}  id:{a['id']}")
+
+# Filtra VALIDAÇÃO CRIATIVO — busca case-insensitive e por substring parcial
+targets = [
+    a for a in adsets
+    if 'VALIDA' in a['name'].upper() or 'CRIATIVO' in a['name'].upper() or 'C\u00f3pia' in a['name'] or 'C\u00d3PIA' in a['name'].upper() or 'COPIA' in a['name'].upper()
+]
 targets.sort(key=lambda x: x.get('created_time', ''))
 
-print(f"\n{len(targets)} ad sets encontrados com 'VALIDAÇÃO CRIATIVO':")
+print(f"\n{len(targets)} ad sets alvos para renomear:")
 for i, a in enumerate(targets, 1):
-    print(f"  {i:2}. [{a.get('effective_status','?')[:6]}] {a['name']}")
+    print(f"  {i:2}. [{a.get('effective_status','?')[:6]}] {repr(a['name'])}")
     print(f"       id:{a['id']} | criado:{a.get('created_time','')[:19]}")
 
 # ─── 2. Busca os ADS de cada adset ───────────────────────────────────────────
