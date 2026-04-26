@@ -6,14 +6,9 @@ ACCT  = "act_592324092832640"
 GH_BASE = "https://github.com/manualdotrafego/Contas-de-anuncio/releases/download/creatives-devspace-v1"
 
 CREATIVES = [
-    "1-pedro-completo",
-    "1-pedro-simplificada",
-    "2-robson-completa",
-    "2-robson-simplificada",
-    "3-aline-completo",
-    "3-aline-simplificada",
-    "4-vitor-geologo",
-    "5-gabrielle-completo",
+    "1-pedro-sem-caixinha",
+    "2-robson-sem-caixinha",
+    "3-aline-sem-caixinha",
 ]
 
 def get_direct_url(gh_url):
