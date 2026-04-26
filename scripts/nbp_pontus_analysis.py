@@ -75,7 +75,7 @@ fields = ','.join([
 
 ins = api_get(f"{BASE}/{ACCT}/insights", {
     'fields': fields,
-    'date_preset': 'lifetime',
+    'time_range': json.dumps({'since': '2026-01-01', 'until': '2026-04-26'}),
     'level': 'account'
 })
 rows = ins.get('data', [{}])
@@ -164,7 +164,7 @@ print("=" * 65)
 
 camp_ins = paginate(f"{BASE}/{ACCT}/insights", {
     'fields': 'campaign_name,spend,impressions,clicks,ctr,actions,outbound_clicks,cost_per_action_type',
-    'date_preset': 'lifetime',
+    'time_range': json.dumps({'since': '2026-01-01', 'until': '2026-04-26'}),
     'level': 'campaign',
     'limit': 50
 })
@@ -188,6 +188,42 @@ for ci in camp_ins:
     if cpl_c: print(f" | CPL:R${cpl_c:.2f}", end="")
     print()
     print(f"    Taxa LPV/OBC:{lpv_r_c:.1f}% | Taxa Conv/LPV:{conv_r_c:.1f}%")
+
+# ─── 4b. AD-LEVEL BREAKDOWN ───────────────────────────────────────────────────
+print("\n" + "=" * 65)
+print("POR ANÚNCIO — TODO O PERÍODO")
+print("=" * 65)
+
+ad_ins = paginate(f"{BASE}/{ACCT}/insights", {
+    'fields': 'ad_name,adset_name,spend,impressions,clicks,ctr,actions,outbound_clicks,landing_page_view,video_p25_watched_actions,video_p100_watched_actions',
+    'time_range': json.dumps({'since': '2026-01-01', 'until': '2026-04-26'}),
+    'level': 'ad',
+    'limit': 100
+})
+
+ad_ins.sort(key=lambda x: -float(x.get('spend',0)))
+for ai in ad_ins:
+    sp    = float(ai.get('spend',0))
+    imp_a = int(ai.get('impressions',0))
+    ctr_a = float(ai.get('ctr',0))
+    acts_a= ai.get('actions',[])
+    leads_a = av(acts_a,'lead') or av(acts_a,'onsite_conversion.lead_grouped')
+    lpv_a   = av(acts_a,'landing_page_view') or float(ai.get('landing_page_view',[{}])[0].get('value',0) if ai.get('landing_page_view') else 0)
+    obc_a   = sum(float(x.get('value',0)) for x in ai.get('outbound_clicks',[]))
+    v25_a   = sum(float(x.get('value',0)) for x in ai.get('video_p25_watched_actions',[]))
+    v100_a  = sum(float(x.get('value',0)) for x in ai.get('video_p100_watched_actions',[]))
+    cpl_a   = sp/leads_a if leads_a>0 else None
+    lpv_r_a = (lpv_a/obc_a*100) if obc_a>0 else 0
+    conv_r_a= (leads_a/lpv_a*100) if lpv_a>0 else 0
+
+    print(f"\n  [{ai.get('adset_name','?')}] {ai.get('ad_name','?')}")
+    print(f"    Gasto:R${sp:.2f} | Imp:{imp_a:,} | CTR:{ctr_a:.2f}%")
+    print(f"    OBC:{obc_a:.0f} | LPV:{lpv_a:.0f} | Leads:{leads_a:.0f}", end="")
+    if cpl_a: print(f" | CPL:R${cpl_a:.2f}", end="")
+    print()
+    if v25_a > 0:
+        print(f"    Video 25%:{v25_a:.0f} | Video 100%:{v100_a:.0f}")
+    print(f"    Taxa LPV/OBC:{lpv_r_a:.1f}% | Taxa Lead/LPV:{conv_r_a:.1f}%")
 
 # ─── 5. PIXEL EVENTS CHECK ────────────────────────────────────────────────────
 print("\n" + "=" * 65)
