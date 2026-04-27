@@ -38,18 +38,33 @@ adsets = paginate(f"{BASE}/{ACCT}/adsets", {
     'limit': 100
 })
 
-print(f"\nTODOS os ad sets na conta ({len(adsets)} total):")
-for a in sorted(adsets, key=lambda x: x.get('created_time','')):
-    print(f"  [{a.get('effective_status','?')[:6]}] {repr(a['name'][:80])}  id:{a['id']}")
+# ─── Busca a campanha pelo nome ───────────────────────────────────────────────
+CAMP_NAME = "[CAPTAÇÃO] - [0 AO EMPREGO] - [VALIDAÇÃO CRIATIVO]"
+print(f"\nBuscando campanha: {CAMP_NAME}")
 
-# Filtra VALIDAÇÃO CRIATIVO — busca case-insensitive e por substring parcial
-targets = [
-    a for a in adsets
-    if 'VALIDA' in a['name'].upper() or 'CRIATIVO' in a['name'].upper() or 'C\u00f3pia' in a['name'] or 'C\u00d3PIA' in a['name'].upper() or 'COPIA' in a['name'].upper()
-]
+campaigns = paginate(f"{BASE}/{ACCT}/campaigns", {
+    'fields': 'id,name,effective_status',
+    'limit': 100
+})
+
+camp = next((c for c in campaigns if CAMP_NAME in c['name']), None)
+if not camp:
+    # tenta busca parcial
+    camp = next((c for c in campaigns if 'VALIDA' in c['name'].upper() and 'EMPREGO' in c['name'].upper()), None)
+
+if not camp:
+    print("CAMPANHA NÃO ENCONTRADA. Campanhas disponíveis:")
+    for c in campaigns:
+        print(f"  {repr(c['name'])}")
+    exit(1)
+
+print(f"  ✅ Encontrada: {camp['name']}  (id:{camp['id']})")
+
+# ─── Filtra adsets DESTA campanha ─────────────────────────────────────────────
+targets = [a for a in adsets if a.get('campaign_id') == camp['id']]
 targets.sort(key=lambda x: x.get('created_time', ''))
 
-print(f"\n{len(targets)} ad sets alvos para renomear:")
+print(f"\n{len(targets)} ad sets nessa campanha:")
 for i, a in enumerate(targets, 1):
     print(f"  {i:2}. [{a.get('effective_status','?')[:6]}] {repr(a['name'])}")
     print(f"       id:{a['id']} | criado:{a.get('created_time','')[:19]}")
