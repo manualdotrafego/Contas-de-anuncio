@@ -43,7 +43,7 @@ found_camp = None
 next_url = f"{BASE}/{ACCT}/campaigns"
 params = {
     'fields': 'id,name,effective_status',
-    'effective_status': json.dumps(["ACTIVE","PAUSED","IN_DRAFT","ARCHIVED","DELETED"]),
+    'effective_status': json.dumps(["ACTIVE","PAUSED","ARCHIVED","DELETED","PENDING_REVIEW","WITH_ISSUES"]),
     'limit': 100
 }
 
@@ -77,7 +77,7 @@ print("="*60)
 
 adsets_resp = api_get(f"{BASE}/{found_camp['id']}/adsets", {
     'fields': 'id,name,created_time,effective_status',
-    'effective_status': json.dumps(["ACTIVE","PAUSED","IN_DRAFT","ARCHIVED","CAMPAIGN_PAUSED"]),
+    'effective_status': json.dumps(["ACTIVE","PAUSED","ARCHIVED","CAMPAIGN_PAUSED","ADSET_PAUSED","PENDING_REVIEW"]),
     'limit': 100
 })
 adsets = adsets_resp.get('data', [])
@@ -102,7 +102,7 @@ for a in adsets:
     time.sleep(0.2)
     ads = api_get(f"{BASE}/{a['id']}/ads", {
         'fields': 'id,name,created_time',
-        'effective_status': json.dumps(["ACTIVE","PAUSED","IN_DRAFT","ARCHIVED","CAMPAIGN_PAUSED","ADSET_PAUSED"]),
+        'effective_status': json.dumps(["ACTIVE","PAUSED","ARCHIVED","CAMPAIGN_PAUSED","ADSET_PAUSED","PENDING_REVIEW"]),
         'limit': 50
     }).get('data', [])
     adset_ads[a['id']] = sorted(ads, key=lambda x: x.get('created_time',''))
@@ -149,7 +149,7 @@ print("="*60)
 time.sleep(1)
 final_adsets = api_get(f"{BASE}/{found_camp['id']}/adsets", {
     'fields': 'id,name',
-    'effective_status': json.dumps(["ACTIVE","PAUSED","IN_DRAFT","ARCHIVED","CAMPAIGN_PAUSED"]),
+    'effective_status': json.dumps(["ACTIVE","PAUSED","ARCHIVED","CAMPAIGN_PAUSED","ADSET_PAUSED","PENDING_REVIEW"]),
     'limit': 100
 }).get('data', [])
 final_adsets.sort(key=lambda x: x.get('name',''))
@@ -157,7 +157,7 @@ for a in final_adsets:
     time.sleep(0.1)
     ads = api_get(f"{BASE}/{a['id']}/ads", {
         'fields': 'id,name',
-        'effective_status': json.dumps(["ACTIVE","PAUSED","IN_DRAFT","ARCHIVED","CAMPAIGN_PAUSED","ADSET_PAUSED"]),
+        'effective_status': json.dumps(["ACTIVE","PAUSED","ARCHIVED","CAMPAIGN_PAUSED","ADSET_PAUSED","PENDING_REVIEW"]),
         'limit': 50
     }).get('data', [])
     print(f"\n  {a['name']}")
