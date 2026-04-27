@@ -13,4 +13,4 @@ jobs:
       - name: Check accounts
         env:
           META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
-        run: python scripts/rename_adsets.py
+        run: python scripts/download_leads.py
