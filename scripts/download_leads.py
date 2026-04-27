@@ -47,14 +47,45 @@ camps = paginate(f"{BASE}/{ACCT}/campaigns", {
 for c in camps:
     print(f"  [{c.get('effective_status','?')[:6]}] {c['name']}")
 
-# ─── 3. Todos os formulários nativos da conta ──────────────────────────────────
-print("\n📝 FORMULÁRIOS NATIVOS:")
-forms = paginate(f"{BASE}/{ACCT}/leadgen_forms", {
-    'fields': 'id,name,status,leads_count,created_time',
-    'limit': 100
-})
-for f in forms:
-    print(f"  [{f.get('status','?')}] {f['name']}  | total:{f.get('leads_count','?')} | id:{f['id']}")
+# ─── 3. Busca form_ids dos anúncios de cada campanha ──────────────────────────
+print("\n📝 BUSCANDO FORMULÁRIOS VIA ADS:")
+
+form_map = {}   # form_id → {'name': ..., 'campaign': ...}
+
+for camp in camps:
+    cid   = camp['id']
+    cname = camp['name']
+
+    # Pega ads da campanha
+    ads = get(f"{BASE}/{cid}/ads", {
+        'fields': 'id,name,creative',
+        'limit': 100
+    }).get('data', [])
+
+    for ad in ads:
+        creative_id = ad.get('creative', {}).get('id')
+        if not creative_id:
+            continue
+        creative = get(f"{BASE}/{creative_id}", {
+            'fields': 'id,object_story_spec,lead_gen_form_id'
+        })
+        form_id = creative.get('lead_gen_form_id')
+        if form_id and form_id not in form_map:
+            # Busca nome do form
+            form_info = get(f"{BASE}/{form_id}", {'fields': 'id,name,status,leads_count'})
+            form_map[form_id] = {
+                'name': form_info.get('name', 'Sem nome'),
+                'status': form_info.get('status', '?'),
+                'leads_count': form_info.get('leads_count', 0),
+                'campaign': cname,
+            }
+            print(f"  ✅ Form encontrado: [{form_info.get('status','?')}] {form_info.get('name','?')}  (total: {form_info.get('leads_count',0)} leads)")
+
+if not form_map:
+    print("  ⚠️  Nenhum form nativo encontrado nos ads ativos/pausados.")
+    # Tenta via página
+    page_info = get(f"{BASE}/{ACCT}", {'fields': 'business'})
+    print(f"  Business info: {page_info}")
 
 # ─── 4. Baixa leads de cada formulário no período ─────────────────────────────
 print("\n" + "="*65)
@@ -63,9 +94,9 @@ print("="*65)
 
 all_leads = []
 
-for form in forms:
-    fid   = form['id']
-    fname = form['name']
+for fid, fdata in form_map.items():
+    fname = fdata['name']
+    camp  = fdata['campaign']
 
     leads = paginate(f"{BASE}/{fid}/leads", {
         'fields': 'id,created_time,field_data,ad_id,ad_name,campaign_id,campaign_name,adset_name',
@@ -77,14 +108,13 @@ for form in forms:
     })
 
     if leads:
-        print(f"\n  ✅ [{fname}] — {len(leads)} leads")
-        print(f"     Campanha: {leads[0].get('campaign_name','?') if leads else '?'}")
+        print(f"\n  ✅ [{fname}] ({camp[:40]}) — {len(leads)} leads")
         for lead in leads:
             row = {
                 'lead_id':    lead.get('id',''),
                 'data_hora':  lead.get('created_time','')[:19],
                 'formulario': fname,
-                'campanha':   lead.get('campaign_name',''),
+                'campanha':   lead.get('campaign_name','') or camp,
                 'conjunto':   lead.get('adset_name',''),
                 'anuncio':    lead.get('ad_name',''),
             }
@@ -93,7 +123,7 @@ for form in forms:
                 row[field['name']] = ', '.join(vals) if isinstance(vals, list) else str(vals)
             all_leads.append(row)
     else:
-        print(f"\n  ○ [{fname}] — 0 leads no período")
+        print(f"\n  ○ [{fname}] ({camp[:40]}) — 0 leads no período")
 
 # ─── 5. Resumo e CSV ──────────────────────────────────────────────────────────
 print("\n" + "="*65)
