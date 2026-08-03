@@ -1,41 +1,44 @@
 import requests, os, json, time
+from datetime import date
 TOKEN=os.environ['META_ACCESS_TOKEN']; BASE="https://graph.facebook.com/v19.0"
-BR=["120256165865940002","120256131329440002"]
-alvos=[]
-for cid in BR:
-    for tent in range(3):
-        r=requests.get(f"{BASE}/{cid}/adsets",params={
-            'fields':'id,name,effective_status,targeting','limit':100,'access_token':TOKEN},timeout=60).json()
-        if 'error' in r:
-            print(f"  !! erro listando {cid}: {r['error'].get('message','')[:100]} (tentativa {tent+1})")
-            time.sleep(3); continue
-        d=r.get('data',[])
-        print(f"  campanha {cid}: {len(d)} conjuntos")
-        for s in d:
-            alvos.append((s['id'], s['name'][:38], s.get('effective_status'), s.get('targeting',{})))
-        break
+CID="120256165865940002"  # BR LP AJUSTADA
+hoje=date.today().isoformat()
 
-print(f"\n=== REMOVENDO AUDIENCE NETWORK ({len(alvos)} conjuntos) ===")
-ok=0; err=0; skip=0
-for aid,nm,st,t in alvos:
-    if t.get('publisher_platforms')==["facebook","instagram"]:
-        skip+=1; print(f"  JA  [{st[:8]}] {nm}"); continue
-    novo=dict(t)
-    novo['publisher_platforms']=["facebook","instagram"]
-    for k in ('audience_network_positions','messenger_positions','facebook_positions','instagram_positions'):
-        novo.pop(k,None)
-    pr=requests.post(f"{BASE}/{aid}",data={'targeting':json.dumps(novo),'access_token':TOKEN},timeout=60).json()
-    if pr.get('success'):
-        ok+=1; print(f"  OK  [{st[:8]}] {nm}")
-    else:
-        err+=1; e=pr.get('error',{}); print(f"  ERR [{st[:8]}] {nm} -> {e.get('error_user_msg', e.get('message',''))[:110]}")
-    time.sleep(0.35)
-print(f"\n=== {ok} alterados | {skip} ja estavam | {err} erros ===")
-
-print("\n=== ATIVOS — POSICIONAMENTO FINAL ===")
-for cid in BR:
-    r=requests.get(f"{BASE}/{cid}/adsets",params={
-        'fields':'name,effective_status,targeting','limit':100,'access_token':TOKEN},timeout=60).json()
+# 1. Estado atual dos posicionamentos
+print("## POSICIONAMENTOS AGORA")
+for tent in range(4):
+    r=requests.get(f"{BASE}/{CID}/adsets",params={
+        'fields':'id,name,effective_status,targeting','limit':50,'access_token':TOKEN},timeout=60).json()
+    if 'error' in r:
+        print(f"   (rate limit, tentativa {tent+1})"); time.sleep(20); continue
     for s in r.get('data',[]):
         if s.get('effective_status') in ('ACTIVE','IN_PROCESS'):
-            print(f"  {s['name'][:42]} -> {s.get('targeting',{}).get('publisher_platforms')}")
+            pp=s.get('targeting',{}).get('publisher_platforms')
+            an = 'SEM AN' if pp==['facebook','instagram'] else ('AUTO (com AN)' if pp is None else str(pp))
+            print(f"##P|{s['name'][:38]}|{an}")
+    break
+
+# 2. Gasto por hora hoje
+print(f"\n## GASTO POR HORA HOJE ({hoje})")
+for tent in range(4):
+    r=requests.get(f"{BASE}/{CID}/insights",params={
+        'fields':'spend,impressions,actions',
+        'breakdowns':'hourly_stats_aggregated_by_advertiser_time_zone',
+        'time_range':json.dumps({'since':hoje,'until':hoje}),
+        'access_token':TOKEN},timeout=60).json()
+    if 'error' in r:
+        print(f"   (rate limit, tentativa {tent+1})"); time.sleep(20); continue
+    tot_antes=0; tot_depois=0; l_antes=0; l_depois=0
+    for d in r.get('data',[]):
+        h=d.get('hourly_stats_aggregated_by_advertiser_time_zone','')
+        sp=float(d.get('spend',0))
+        l=0
+        for a in d.get('actions',[]) or []:
+            if a.get('action_type') in ('onsite_conversion.lead_grouped','lead','offsite_conversion.fb_pixel_lead','onsite_web_lead'):
+                l=max(l,int(a.get('value',0)))
+        hi=int(h.split(':')[0]) if h else 0
+        print(f"##H|{h}|{sp:.2f}|{l}")
+        if hi<11: tot_antes+=sp; l_antes+=l
+        else: tot_depois+=sp; l_depois+=l
+    print(f"##RESUMO|antes11h|{tot_antes:.2f}|{l_antes}|depois11h|{tot_depois:.2f}|{l_depois}")
+    break
