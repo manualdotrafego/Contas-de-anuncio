@@ -1,34 +1,33 @@
 import requests, os, json
-from datetime import date
 TOKEN=os.environ['META_ACCESS_TOKEN']; BASE="https://graph.facebook.com/v19.0"
-today=date.today()
-PT=[("120255355949960002","TESTE MAFRA"),("120254908221730002","CBO ESCALA"),("120248546729160002","NOVA CAPTACAO")]
-BR=[("120256165865940002","BR LP AJUSTADA"),("120256131329440002","BR CICLO TESTE")]
+BR=["120256165865940002","120256131329440002"]
+for cid in BR:
+    c=requests.get(f"{BASE}/{cid}",params={'fields':'name','access_token':TOKEN},timeout=30).json()
+    print(f"\n## CAMPANHA: {c.get('name')}")
+    r=requests.get(f"{BASE}/{cid}/adsets",params={
+        'fields':'id,name,effective_status,targeting','limit':100,'access_token':TOKEN},timeout=40).json()
+    for s in r.get('data',[]):
+        t=s.get('targeting',{})
+        pp=t.get('publisher_platforms')
+        fbp=t.get('facebook_positions'); igp=t.get('instagram_positions')
+        anp=t.get('audience_network_positions'); mnp=t.get('messenger_positions')
+        auto = pp is None
+        print(f"##S|{s['id']}|{s['name'][:40]}|{s.get('effective_status')}|auto={auto}|pp={pp}|an_pos={anp}")
+# desempenho por plataforma (ultimos 6 dias)
+print("\n## DESEMPENHO POR PLATAFORMA (BR, 29/07-hoje)")
+from datetime import date
 def gm(a):
-    l=lc=0
+    l=0
     for x in a or []:
-        t=x.get('action_type',''); v=int(x.get('value',0))
-        if t in('onsite_conversion.lead_grouped','lead','offsite_conversion.fb_pixel_lead','onsite_web_lead'): l=max(l,v)
-        elif t=='link_click': lc=v
-    return l,lc
-def bloco(camps, since, until, tag):
-    tot={'spend':0,'imp':0,'clk':0,'lc':0,'leads':0}
-    for cid,nm in camps:
-        d=requests.get(f"{BASE}/{cid}/insights",params={'fields':'spend,impressions,clicks,actions',
-            'time_range':json.dumps({'since':since,'until':until}),'access_token':TOKEN},timeout=30).json().get('data',[])
-        if not d: continue
-        d=d[0]; sp=float(d.get('spend',0)); l,lc=gm(d.get('actions',[]))
-        print(f"##P|{tag}|{nm}|{sp:.2f}|{l}")
-        for k,v in [('spend',sp),('imp',int(d.get('impressions',0))),('clk',int(d.get('clicks',0))),('lc',lc),('leads',l)]:
-            tot[k]+=v
-    n=(date.fromisoformat(until)-date.fromisoformat(since)).days+1
-    cpm=tot['spend']/tot['imp']*1000 if tot['imp'] else 0
-    ctr=tot['clk']/tot['imp']*100 if tot['imp'] else 0
-    cpc=tot['spend']/tot['lc'] if tot['lc'] else 0
-    conv=tot['leads']/tot['lc']*100 if tot['lc'] else 0
-    cpl=tot['spend']/tot['leads'] if tot['leads'] else 0
-    print(f"##{tag}|{n}|{tot['spend']:.2f}|{tot['imp']}|{tot['clk']}|{cpm:.2f}|{ctr:.2f}|{cpc:.2f}|{tot['leads']}|{conv:.2f}|{cpl:.2f}")
-print(f"## HOJE={today}")
-u=min(today.isoformat(),"2026-08-04")
-print("## PT"); bloco(PT,"2026-07-29",u,"PT")
-print("## BR"); bloco(BR,"2026-07-29",u,"BR")
+        if x.get('action_type') in ('onsite_conversion.lead_grouped','lead','offsite_conversion.fb_pixel_lead','onsite_web_lead'):
+            l=max(l,int(x.get('value',0)))
+    return l
+for cid in BR:
+    r=requests.get(f"{BASE}/{cid}/insights",params={
+        'fields':'spend,impressions,actions','breakdowns':'publisher_platform',
+        'time_range':json.dumps({'since':'2026-07-29','until':date.today().isoformat()}),
+        'access_token':TOKEN},timeout=40).json()
+    for d in r.get('data',[]):
+        sp=float(d.get('spend',0)); l=gm(d.get('actions',[]))
+        cpl=sp/l if l else 0
+        print(f"##PL|{d.get('publisher_platform')}|{sp:.2f}|{l}|{cpl:.2f}|{int(d.get('impressions',0))}")
