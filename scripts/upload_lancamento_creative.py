@@ -1,43 +1,36 @@
-import os, json, urllib.request, urllib.parse, time
-TOKEN=os.environ['META_ACCESS_TOKEN']; ACT='act_615338413578534'; API='https://graph.facebook.com/v19.0'
-def get(path,params):
-    params['access_token']=TOKEN
-    url=f"{API}/{path}?{urllib.parse.urlencode(params)}"
+import os,json,urllib.request,urllib.parse,time
+TOKEN=os.environ['META_ACCESS_TOKEN']; API='https://graph.facebook.com/v19.0'
+CID='120255355949960002'
+def get(p,q):
+    q['access_token']=TOKEN
     for a in range(5):
         try:
-            with urllib.request.urlopen(url,timeout=180) as r: return json.load(r)
+            with urllib.request.urlopen(f"{API}/{p}?{urllib.parse.urlencode(q)}",timeout=180) as r: return json.load(r)
         except urllib.error.HTTPError as e:
             b=e.read().decode()
             if 'limit' in b.lower() and a<4: time.sleep(50); continue
-            return {'__err':b[:300]}
+            return {'__err':b[:250]}
         except Exception: time.sleep(15)
     return {}
-camps=get(f'{ACT}/campaigns',{'fields':'id,name,status,effective_status','limit':300}).get('data',[])
-pt=[c for c in camps if 'BRASIL' not in c['name'].upper()]
-print('=== CAMPANHAS NAO-BR ===')
-for c in pt: print(c['id'],'|',c['name'],'|',c['effective_status'])
+print('=== CONJUNTOS E SEGMENTACAO ===')
+ads=get(f'{CID}/adsets',{'fields':'id,name,effective_status,daily_budget,targeting{age_min,age_max,genders,geo_locations,publisher_platforms}','limit':100}).get('data',[])
+for s in ads:
+    t=s.get('targeting',{})
+    print(json.dumps({'id':s['id'],'nome':s['name'],'st':s['effective_status'],
+      'budget':(int(s['daily_budget'])/100 if s.get('daily_budget') else None),
+      'age':f"{t.get('age_min')}-{t.get('age_max')}",'gen':t.get('genders'),
+      'plat':t.get('publisher_platforms'),
+      'geo':(t.get('geo_locations',{}).get('countries') or t.get('geo_locations',{}).get('cities'))},ensure_ascii=False))
 TR=json.dumps({'since':'2026-07-29','until':'2026-08-04'})
 def A(r): return {x['action_type']:float(x['value']) for x in r.get('actions',[])}
-def show(rows,bd,label):
-    print(f'\n=== {label} ===')
-    for row in rows:
-        a=A(row); lead=a.get('lead') or a.get('offsite_conversion.fb_pixel_lead') or a.get('onsite_conversion.lead_grouped')
-        print(json.dumps({'camp':row.get('_c'),'k':[row.get(x) for x in bd] if bd else 'TOTAL',
-          'spend':row.get('spend'),'impr':row.get('impressions'),'lc':row.get('inline_link_clicks'),
-          'lpv':a.get('landing_page_view'),'lead':lead},ensure_ascii=False))
-def pull(bd,label):
-    out=[]
-    for c in pt:
-        p={'level':'campaign','time_range':TR,'fields':'spend,impressions,clicks,inline_link_clicks,actions','limit':500}
-        if bd: p['breakdowns']=','.join(bd)
-        r=get(f"{c['id']}/insights",p)
-        if '__err' in r: print('ERRO',c['name'],r['__err'][:150]); continue
-        for row in r.get('data',[]):
-            if float(row.get('spend',0))==0: continue
-            row['_c']=c['name']; out.append(row)
-    show(out,bd,label)
-pull([],'TOTAL POR CAMPANHA')
-pull(['publisher_platform'],'POR PLATAFORMA')
-pull(['publisher_platform','platform_position'],'POR POSICAO')
-pull(['age'],'POR IDADE')
-pull(['impression_device'],'POR DISPOSITIVO')
+for bd,lb in [('age','ADSET x IDADE'),('age,gender','ADSET x IDADE x GENERO')]:
+    r=get(f'{CID}/insights',{'level':'adset','time_range':TR,'breakdowns':bd,
+      'fields':'adset_name,spend,impressions,inline_link_clicks,actions','limit':500})
+    print(f'\n=== {lb} ===')
+    if '__err' in r: print(' FALHOU',r['__err'][:180]); continue
+    for row in r.get('data',[]):
+        if float(row.get('spend',0))==0: continue
+        a=A(row)
+        print(json.dumps({'adset':row['adset_name'][:46],'k':[row.get(x) for x in bd.split(',')],
+          'spend':row['spend'],'impr':row.get('impressions'),'lc':row.get('inline_link_clicks'),
+          'lpv':a.get('landing_page_view'),'lead':a.get('lead')},ensure_ascii=False))
