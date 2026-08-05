@@ -1,58 +1,68 @@
-import os,json,urllib.request,urllib.parse,time,datetime
-TOKEN=os.environ['META_ACCESS_TOKEN']; API='https://graph.facebook.com/v19.0'; CID='120256297322760002'
-def get(p,q):
-    q['access_token']=TOKEN
+import os,json,urllib.request,urllib.parse,time
+TOKEN=os.environ['META_ACCESS_TOKEN']; API='https://graph.facebook.com/v19.0'
+INT='120256297322770002'   # INTERESSE RESTRITO
+LAL='120256321507330002'   # LAL 1%
+def req(path,params,post=False):
+    params['access_token']=TOKEN
+    data=urllib.parse.urlencode(params).encode() if post else None
+    url=f"{API}/{path}" + ('' if post else '?'+urllib.parse.urlencode(params))
     for a in range(5):
         try:
-            with urllib.request.urlopen(f"{API}/{p}?{urllib.parse.urlencode(q)}",timeout=180) as r: return json.load(r)
+            r=urllib.request.Request(url,data=data,method='POST' if post else 'GET')
+            with urllib.request.urlopen(r,timeout=120) as resp: return json.load(resp)
         except urllib.error.HTTPError as e:
             b=e.read().decode()
             if 'limit' in b.lower() and a<4: time.sleep(50); continue
-            return {'__err':b[:300]}
-        except Exception: time.sleep(15)
+            return {'__err':b[:600]}
+        except Exception as ex:
+            if a<4: time.sleep(15); continue
+            return {'__err':str(ex)[:300]}
     return {}
-def A(r): return {x['action_type']:float(x['value']) for x in r.get('actions',[])}
-def L(a): return a.get('lead') or a.get('offsite_conversion.fb_pixel_lead') or a.get('onsite_conversion.lead_grouped')
-print('AGORA UTC:',datetime.datetime.utcnow().isoformat())
-acc=get('act_615338413578534',{'fields':'timezone_name,currency,amount_spent,balance'})
-print('CONTA:',json.dumps(acc,ensure_ascii=False))
-ads=get(f'{CID}/adsets',{'fields':'id,name,effective_status,daily_budget,budget_remaining,'
-  'learning_stage_info,optimization_goal,bid_strategy,created_time,'
-  'targeting{age_min,age_max,publisher_platforms,custom_audiences,flexible_spec}','limit':50}).get('data',[])
-print('\n--- CONJUNTOS ---')
-info={}
-for s in ads:
+
+print('===== 1) ORCAMENTO [INTERESSE RESTRITO] =====')
+b=req(INT,{'fields':'name,daily_budget,learning_stage_info'})
+print('ANTES:',json.dumps(b,ensure_ascii=False))
+r=req(INT,{'daily_budget':'1200'},post=True)
+print('POST:',json.dumps(r,ensure_ascii=False))
+time.sleep(3)
+print('DEPOIS:',json.dumps(req(INT,{'fields':'name,daily_budget,effective_status,learning_stage_info'}),ensure_ascii=False))
+
+print('\n===== 2) [LAL 1%] REMOVER PUBLICO PERSONALIZADO =====')
+a=req(LAL,{'fields':'name,effective_status,daily_budget,targeting'})
+print('ANTES nome:',a.get('name'))
+t=a.get('targeting',{})
+print('TARGETING ANTES:',json.dumps(t,ensure_ascii=False))
+for k in ('custom_audiences','excluded_custom_audiences'):
+    if k in t: print(f'  removendo {k}:',json.dumps(t[k],ensure_ascii=False)); t.pop(k)
+# limpar chaves derivadas que a API costuma rejeitar no POST
+for k in ('brand_safety_content_filter_levels','targeting_relaxation_types',
+          'targeting_automation','is_whatsapp_destination_ad'):
+    t.pop(k,None)
+print('TARGETING NOVO:',json.dumps(t,ensure_ascii=False))
+r=req(LAL,{'targeting':json.dumps(t)},post=True)
+print('POST:',json.dumps(r,ensure_ascii=False))
+if '__err' in r:
+    print('-> tentando spec minima')
+    t2={k:v for k,v in t.items() if k in ('geo_locations','age_min','age_max','genders',
+        'publisher_platforms','facebook_positions','instagram_positions','messenger_positions',
+        'device_platforms','locales')}
+    print('SPEC MINIMA:',json.dumps(t2,ensure_ascii=False))
+    r=req(LAL,{'targeting':json.dumps(t2)},post=True)
+    print('POST 2:',json.dumps(r,ensure_ascii=False))
+time.sleep(3)
+d=req(LAL,{'fields':'name,effective_status,daily_budget,targeting,learning_stage_info'})
+print('DEPOIS:',json.dumps(d,ensure_ascii=False))
+de=req(f'{LAL}/delivery_estimate',{'fields':'estimate_mau_lower_bound,estimate_mau_upper_bound'})
+print('TAMANHO PUBLICO DEPOIS:',json.dumps(de.get('data',[{}])[0],ensure_ascii=False))
+
+print('\n===== RESUMO CONJUNTOS =====')
+for s in req('120256297322760002/adsets',{'fields':'id,name,effective_status,daily_budget,'
+    'targeting{age_min,age_max,custom_audiences,geo_locations,publisher_platforms},learning_stage_info','limit':50}).get('data',[]):
     t=s.get('targeting',{})
-    fs=t.get('flexible_spec') or []
-    ints=[i.get('name') for g in fs for i in (g.get('interests') or [])]
-    info[s['id']]=s['name']
-    print(json.dumps({'id':s['id'],'nome':s['name'],'st':s['effective_status'],
-      'orc_dia':(int(s['daily_budget'])/100 if s.get('daily_budget') else None),
-      'aprendizagem':s.get('learning_stage_info'),'goal':s.get('optimization_goal'),
-      'bid':s.get('bid_strategy'),'criado':s.get('created_time'),
+    print(json.dumps({'nome':s['name'][:45],'st':s['effective_status'],
+      'orc':(int(s['daily_budget'])/100 if s.get('daily_budget') else None),
       'age':f"{t.get('age_min')}-{t.get('age_max')}",
-      'ca':[c.get('name') for c in (t.get('custom_audiences') or [])],'int':ints[:10]},ensure_ascii=False))
-    de=get(f"{s['id']}/delivery_estimate",{'fields':'estimate_dau,estimate_mau_lower_bound,estimate_mau_upper_bound'})
-    if de.get('data'): print('   tamanho_publico:',json.dumps(de['data'][0],ensure_ascii=False))
-F='spend,impressions,clicks,inline_link_clicks,actions,reach,frequency,cpm,ctr'
-for prst,lab in [('today','HOJE'),('maximum','VIDA')]:
-    r=get(f'{CID}/insights',{'level':'adset','date_preset':prst,'fields':'adset_id,adset_name,'+F,'limit':100})
-    print(f'\n--- CONJUNTO {lab} ---')
-    for row in r.get('data',[]):
-        a=A(row)
-        print(json.dumps({'nome':row['adset_name'][:44],'spend':row['spend'],'impr':row.get('impressions'),
-          'reach':row.get('reach'),'freq':row.get('frequency'),'cpm':row.get('cpm'),'ctr':row.get('ctr'),
-          'lc':row.get('inline_link_clicks'),'lpv':a.get('landing_page_view'),'lead':L(a)},ensure_ascii=False))
-r=get(f'{CID}/insights',{'level':'campaign','date_preset':'today','fields':F,'limit':10})
-for row in r.get('data',[]):
-    a=A(row); print('\nCAMPANHA HOJE:',json.dumps({'spend':row['spend'],'impr':row.get('impressions'),
-      'lc':row.get('inline_link_clicks'),'lpv':a.get('landing_page_view'),'lead':L(a),
-      'freq':row.get('frequency'),'cpm':row.get('cpm')},ensure_ascii=False))
-r=get(f'{CID}/insights',{'level':'adset','date_preset':'today','time_increment':'1',
-  'breakdowns':'hourly_stats_aggregated_by_advertiser_time_zone','fields':'adset_name,spend,actions','limit':500})
-print('\n--- GASTO POR HORA HOJE (conta, Lisboa) ---')
-agg={}
-for row in r.get('data',[]):
-    h=row['hourly_stats_aggregated_by_advertiser_time_zone'][:5]
-    agg.setdefault(h,[0,0]); agg[h][0]+=float(row['spend']); agg[h][1]+=(L(A(row)) or 0)
-for h in sorted(agg): print(f'  {h}  EUR {agg[h][0]:6.2f}   leads {int(agg[h][1])}')
+      'geo':(t.get('geo_locations') or {}).get('countries'),
+      'ca':[c.get('name') for c in (t.get('custom_audiences') or [])],
+      'aprend':(s.get('learning_stage_info') or {}).get('status'),
+      'conv':(s.get('learning_stage_info') or {}).get('conversions')},ensure_ascii=False))
