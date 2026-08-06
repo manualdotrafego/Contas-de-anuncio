@@ -185,7 +185,8 @@ def update_pt(sh, pt_ids, today):
                           [f'=SUM(B4:{last}4)/SUM(B5:{last}5)*1000'],
                           [f'=SUM(B6:{last}6)/SUM(B5:{last}5)*100'],
                           [f'=SUM(B4:{last}4)/SUMPRODUCT(IFERROR(B4:{last}4/B9:{last}9;0))'],
-                          [f'=SUM(B10:{last}10)'], [''],
+                          [f'=SUM(B10:{last}10)'],
+                          [f'=SUM(B10:{last}10)/SUM(B6:{last}6)*100'],
                           [f'=SUM(B4:{last}4)/SUM(B10:{last}10)']],
                   range_name=f'{U}4:{U}12', value_input_option='USER_ENTERED')
     log(f"  PT {label}: EUR {t['spend']:.2f} | {t['lead']} leads | CPL EUR {cpl:.2f}")
@@ -238,6 +239,24 @@ def update_br(sh, br_ids, today, tx):
                       [round(grupo / t['lc'], 6) if (grupo and t['lc']) else 0]],
               range_name=f'{L}21:{L}24', value_input_option='RAW')
     log(f"  BR {label}: EUR {t['spend']:.2f} | {t['lead']} leads | grupo={grupo or 'manual pendente'}")
+    # LIFETIME BR por formula, somando todas as colunas de ciclo
+    hdr3 = ws.get_all_values()[0]
+    if 'LIFETIME BR' in hdr3:
+        D = col_letter(hdr3.index('LIFETIME BR') + 1)
+        lastc = col_letter(hdr3.index('LIFETIME BR'))
+        R = lambda r: f'SUM(B{r}:{lastc}{r})'
+        ws.update(values=[[f'={R(3)}'], [f'={R(4)}'], [f'={R(5)}'], [f'={R(6)}'],
+                          [f'={R(7)}'], [f'={R(8)}'],
+                          [f'={D}4/{D}6*1000'], [f'={D}7/{D}6'], [f'={D}4/{D}8'],
+                          [f'={R(12)}'], [f'={R(13)}'], [f'={D}13/{D}8'], [f'={D}4/{D}13'],
+                          [f'={R(16)}'], [f'=IFERROR({D}4/{D}16;"")'], [f'=IFERROR({D}5/{D}16;"")']],
+                  range_name=f'{D}3:{D}18', value_input_option='USER_ENTERED')
+        ws.update(values=[[f'=IFERROR({D}12/{D}8;"")'], [f'=IFERROR({D}13/{D}12;"")'],
+                          [f'=IFERROR({D}16/{D}13;"")'], [f'=IFERROR({D}16/{D}8;"")']],
+                  range_name=f'{D}21:{D}24', value_input_option='USER_ENTERED')
+        ws.update(values=[[f"29/07 a {today.strftime('%d/%m/%Y')}"]],
+                  range_name=f'{D}2', value_input_option='RAW')
+
     return n, t, grupo
 
 # ---------- dashboard ----------
