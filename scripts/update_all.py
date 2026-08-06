@@ -20,7 +20,7 @@ SHEET_ID = '1sj_Pw5tHAGUqLzNz696bxFxmbaofWKRF5_vFjPpNDwY'
 GID_PT, GID_BR, GID_FUNIL = 1520844617, 2017982781, 557337600
 REPO = 'manualdotrafego/devspace-dashboard'
 DASH_PATH = 'webinar-criativos/index.html'
-PT_C1_START = datetime.date(2026, 3, 26)   # inicio do Ciclo 1 de Portugal
+PT_C1_START = datetime.date(2026, 3, 25)   # inicio do Ciclo 1 de Portugal
 BR_C1_START = datetime.date(2026, 7, 29)   # inicio do Ciclo 1 do Brasil
 CACHE = os.path.join(HERE, 'thumb_cache.json')
 
