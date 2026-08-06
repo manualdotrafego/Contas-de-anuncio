@@ -462,11 +462,25 @@ def publish(html):
 
 # ---------- cotacao ----------
 def cotacao():
-    try:
-        with urllib.request.urlopen('https://economia.awesomeapi.com.br/json/last/EUR-BRL', timeout=25) as r:
-            return float(json.load(r)['EURBRL']['bid'])
-    except Exception:
-        log('  cotacao indisponivel, usando 5.9175'); return 5.9175
+    fontes = [
+        ('https://economia.awesomeapi.com.br/json/last/EUR-BRL',
+         lambda d: float(d['EURBRL']['bid'])),
+        ('https://api.frankfurter.dev/v1/latest?base=EUR&symbols=BRL',
+         lambda d: float(d['rates']['BRL'])),
+        ('https://open.er-api.com/v6/latest/EUR',
+         lambda d: float(d['rates']['BRL'])),
+    ]
+    for url, pick in fontes:
+        try:
+            rq = urllib.request.Request(url, headers={'User-Agent': 'webauto/1.0'})
+            with urllib.request.urlopen(rq, timeout=25) as r:
+                v = pick(json.load(r))
+            if 3 < v < 12:
+                log(f'  cotacao de {urllib.parse.urlparse(url).netloc}'); return v
+        except Exception:
+            continue
+    log('  nenhuma fonte de cotacao respondeu, usando 5.9175')
+    return 5.9175
 
 # ---------- main ----------
 def main():
