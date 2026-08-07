@@ -1,7 +1,8 @@
 name: Atualizacao 6h (planilha + dashboard)
+# AGENDAMENTO DESLIGADO em 07/08/2026: quem roda a cada 6h agora e a VPS
+# (cron 20 */6 * * * em /root/webinar-auto). Este workflow fica so como
+# backup manual, caso a VPS caia. Para rodar: aba Actions > Run workflow.
 on:
-  schedule:
-    - cron: '5 */6 * * *'      # 00:05, 06:05, 12:05, 18:05 UTC
   workflow_dispatch:
 permissions:
   contents: write
