@@ -175,7 +175,7 @@ def update_pt(sh, pt_ids, today):
                       [round(t['spend'], 2)], [t['impr']], [t['clk']],
                       [round(cpm, 2)], [round(ctr, 2)], [round(cpc, 2)],
                       [t['lead']], [round(conv, 2)], [round(cpl, 2)]],
-              range_name=f'{L}1:{L}12', value_input_option='RAW')
+              range_name=f'{L}1:{L}12', value_input_option='RAW')  # nunca passa da 12: 13+ e manual
     # LIFETIME por formula (nao sobrescreve nada manual)
     hdr2 = ws.get_all_values()[0]
     if 'LIFETIME' in hdr2:
@@ -193,6 +193,8 @@ def update_pt(sh, pt_ids, today):
 
 # ---------- BR ----------
 def update_br(sh, br_ids, today, tx):
+    """Escreve por ROTULO da coluna A, nunca por numero fixo de linha, para
+    sobreviver a insercao de linhas novas pelo usuario na planilha."""
     ws = [w for w in sh.worksheets() if w.id == GID_BR][0]
     vals = ws.get_all_values()
     hdr = vals[0]
@@ -206,58 +208,74 @@ def update_br(sh, br_ids, today, tx):
         vals = ws.get_all_values(); hdr = vals[0]
         log(f'  BR: criada coluna do {label}')
     L = col_letter(ci)
+    row_of = {}
+    for k, r in enumerate(vals, 1):
+        key = (r[0] or '').strip().upper()
+        if key and key not in row_of: row_of[key] = k
+    R = lambda lbl: row_of.get(lbl.strip().upper())
     s, e = cycle_bounds(BR_C1_START, n)
     until = min(e, today)
-    rows = daily(br_ids, s.isoformat(), until.isoformat())
-    t = agg(rows)
+    t = agg(daily(br_ids, s.isoformat(), until.isoformat()))
     if t['impr'] == 0:
         log(f'  BR: {label} sem dados ainda'); return
-    # preserva entrantes no grupo (linha 16) digitado manualmente
     grupo = 0
-    try: grupo = int(num(vals[15][ci - 1])) if len(vals) > 15 and len(vals[15]) >= ci else 0
-    except Exception: grupo = 0
-    cpm = t['spend'] / t['impr'] * 1000
-    ctr = t['clk'] / t['impr']
-    cpc = t['spend'] / t['lc'] if t['lc'] else 0
-    conv = t['lead'] / t['lc'] if t['lc'] else 0
-    cpl = t['spend'] / t['lead'] if t['lead'] else 0
-    body = [[label],
-            [f"{s.strftime('%d/%m')} a {until.strftime('%d/%m/%Y')}" + (' (em curso)' if until < e else '')],
-            [(until - s).days + 1],
-            [round(t['spend'], 2)], [round(t['spend'] * tx, 2)],
-            [t['impr']], [t['clk']], [t['lc']],
-            [round(cpm, 2)], [round(ctr, 6)], [round(cpc, 4)],
-            [t['lpv']], [t['lead']], [round(conv, 6)], [round(cpl, 4)]]
-    ws.update(values=body, range_name=f'{L}1:{L}15', value_input_option='RAW')
-    if grupo:   # so escreve custo por entrante se o numero manual existe
-        ws.update(values=[[round(t['spend'] / grupo, 4)],
-                          [round(t['spend'] * tx / grupo, 2)]],
-                  range_name=f'{L}17:{L}18', value_input_option='RAW')
-    ws.update(values=[[round(t['lpv'] / t['lc'], 6) if t['lc'] else 0],
-                      [round(t['lead'] / t['lpv'], 6) if t['lpv'] else 0],
-                      [round(grupo / t['lead'], 6) if (grupo and t['lead']) else 0],
-                      [round(grupo / t['lc'], 6) if (grupo and t['lc']) else 0]],
-              range_name=f'{L}21:{L}24', value_input_option='RAW')
+    rg = R('ENTRANTES NO GRUPO')
+    if rg and len(vals) >= rg and len(vals[rg - 1]) >= ci:
+        grupo = int(num(vals[rg - 1][ci - 1]) or 0)
+    ups = []
+    def put(lbl, val):
+        r = R(lbl)
+        if r: ups.append({'range': f'{L}{r}', 'values': [[val]]})
+    put('KPI', label)
+    put('Periodo', f"{s.strftime('%d/%m')} a {until.strftime('%d/%m/%Y')}"
+        + (' (em curso)' if until < e else ''))
+    put('Dias', (until - s).days + 1)
+    put('VALOR USADO (EUR)', round(t['spend'], 2))
+    put('VALOR USADO (BRL)', round(t['spend'] * tx, 2))
+    put('IMPRESSOES', t['impr'])
+    put('CLIQUES (todos)', t['clk'])
+    put('CLIQUES NO LINK', t['lc'])
+    put('CPM', round(t['spend'] / t['impr'] * 1000, 2))
+    put('CTR', round(t['clk'] / t['impr'], 6))
+    put('CPC link unico', round(t['spend'] / t['lc'], 4) if t['lc'] else 0)
+    put('LERAM A PAGINA (LPV)', t['lpv'])
+    put('LEADS (cliques no botao)', t['lead'])
+    put('% CONVERSAO LEADS', round(t['lead'] / t['lc'], 6) if t['lc'] else 0)
+    put('CPL', round(t['spend'] / t['lead'], 4) if t['lead'] else 0)
+    put('Clique no link para pagina', round(t['lpv'] / t['lc'], 6) if t['lc'] else 0)
+    put('Pagina para botao', round(t['lead'] / t['lpv'], 6) if t['lpv'] else 0)
+    if grupo:
+        put('CUSTO POR ENTRANTE (EUR)', round(t['spend'] / grupo, 4))
+        put('CUSTO POR ENTRANTE (BRL)', round(t['spend'] * tx / grupo, 2))
+        put('Botao para grupo', round(grupo / t['lead'], 6) if t['lead'] else 0)
+        put('Clique para grupo (ponta a ponta)', round(grupo / t['lc'], 6) if t['lc'] else 0)
+    if ups: ws.batch_update(ups, value_input_option='RAW')
+    if 'LIFETIME BR' in hdr:
+        D = col_letter(hdr.index('LIFETIME BR') + 1)
+        lastc = col_letter(hdr.index('LIFETIME BR'))
+        f = []
+        def putf(lbl, formula):
+            r = R(lbl)
+            if r: f.append({'range': f'{D}{r}', 'values': [[formula]]})
+        for lbl in ('Dias', 'VALOR USADO (EUR)', 'VALOR USADO (BRL)', 'IMPRESSOES',
+                    'CLIQUES (todos)', 'CLIQUES NO LINK', 'LERAM A PAGINA (LPV)',
+                    'LEADS (cliques no botao)', 'ENTRANTES NO GRUPO'):
+            if R(lbl): putf(lbl, f'=SUM(B{R(lbl)}:{lastc}{R(lbl)})')
+        g = lambda lbl: f'{D}{R(lbl)}'
+        putf('CPM', f"={g('VALOR USADO (EUR)')}/{g('IMPRESSOES')}*1000")
+        putf('CTR', f"={g('CLIQUES (todos)')}/{g('IMPRESSOES')}")
+        putf('CPC link unico', f"={g('VALOR USADO (EUR)')}/{g('CLIQUES NO LINK')}")
+        putf('% CONVERSAO LEADS', f"={g('LEADS (cliques no botao)')}/{g('CLIQUES NO LINK')}")
+        putf('CPL', f"={g('VALOR USADO (EUR)')}/{g('LEADS (cliques no botao)')}")
+        putf('CUSTO POR ENTRANTE (EUR)', f"=IFERROR({g('VALOR USADO (EUR)')}/{g('ENTRANTES NO GRUPO')};\"\")")
+        putf('CUSTO POR ENTRANTE (BRL)', f"=IFERROR({g('VALOR USADO (BRL)')}/{g('ENTRANTES NO GRUPO')};\"\")")
+        putf('Clique no link para pagina', f"=IFERROR({g('LERAM A PAGINA (LPV)')}/{g('CLIQUES NO LINK')};\"\")")
+        putf('Pagina para botao', f"=IFERROR({g('LEADS (cliques no botao)')}/{g('LERAM A PAGINA (LPV)')};\"\")")
+        putf('Botao para grupo', f"=IFERROR({g('ENTRANTES NO GRUPO')}/{g('LEADS (cliques no botao)')};\"\")")
+        putf('Clique para grupo (ponta a ponta)', f"=IFERROR({g('ENTRANTES NO GRUPO')}/{g('CLIQUES NO LINK')};\"\")")
+        putf('Periodo', f"29/07 a {today.strftime('%d/%m/%Y')}")
+        if f: ws.batch_update(f, value_input_option='USER_ENTERED')
     log(f"  BR {label}: EUR {t['spend']:.2f} | {t['lead']} leads | grupo={grupo or 'manual pendente'}")
-    # LIFETIME BR por formula, somando todas as colunas de ciclo
-    hdr3 = ws.get_all_values()[0]
-    if 'LIFETIME BR' in hdr3:
-        D = col_letter(hdr3.index('LIFETIME BR') + 1)
-        lastc = col_letter(hdr3.index('LIFETIME BR'))
-        R = lambda r: f'SUM(B{r}:{lastc}{r})'
-        ws.update(values=[[f'={R(3)}'], [f'={R(4)}'], [f'={R(5)}'], [f'={R(6)}'],
-                          [f'={R(7)}'], [f'={R(8)}'],
-                          [f'={D}4/{D}6*1000'], [f'={D}7/{D}6'], [f'={D}4/{D}8'],
-                          [f'={R(12)}'], [f'={R(13)}'], [f'={D}13/{D}8'], [f'={D}4/{D}13'],
-                          [f'={R(16)}'], [f'=IFERROR({D}4/{D}16;"")'], [f'=IFERROR({D}5/{D}16;"")']],
-                  range_name=f'{D}3:{D}18', value_input_option='USER_ENTERED')
-        ws.update(values=[[f'=IFERROR({D}12/{D}8;"")'], [f'=IFERROR({D}13/{D}12;"")'],
-                          [f'=IFERROR({D}16/{D}13;"")'], [f'=IFERROR({D}16/{D}8;"")']],
-                  range_name=f'{D}21:{D}24', value_input_option='USER_ENTERED')
-        ws.update(values=[[f"29/07 a {today.strftime('%d/%m/%Y')}"]],
-                  range_name=f'{D}2', value_input_option='RAW')
-
-    return n, t, grupo
 
 # ---------- dashboard ----------
 def thumbs(ad_ids_names):
