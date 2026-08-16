@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-08-15T18:32:28Z",
+  "last_updated": "2026-08-16T01:26:55Z",
   "account": {
     "id": "act_592324092832640",
     "name": "Desafio do 0 ao Emprego",
@@ -7,7 +7,7 @@
   },
   "date_range": {
     "since": "2026-04-27",
-    "until": "2026-08-15"
+    "until": "2026-08-16"
   },
   "camp_filter": "0 ao emprego",
   "summary": {
@@ -2676,6 +2676,30 @@
     },
     {
       "date": "2026-08-15",
+      "spend": 0,
+      "impressions": 0,
+      "clicks": 0,
+      "link_clicks": 0,
+      "lp_views": 0,
+      "reach": 0,
+      "leads": 0,
+      "cpm": 0,
+      "cpc": 0,
+      "cpl": 0,
+      "connect_rate": 0,
+      "lp_conv": 0,
+      "hook_rate": 0,
+      "vp25": 0,
+      "vp50": 0,
+      "vp75": 0,
+      "vp100": 0,
+      "wa_group": 0,
+      "cp_wa": 0,
+      "form_thanks": 0,
+      "cp_form": 0
+    },
+    {
+      "date": "2026-08-16",
       "spend": 0,
       "impressions": 0,
       "clicks": 0,
@@ -5389,6 +5413,30 @@
           "cp_wa": 0,
           "form_thanks": 0,
           "cp_form": 0
+        },
+        {
+          "date": "2026-08-16",
+          "spend": 0,
+          "impressions": 0,
+          "clicks": 0,
+          "link_clicks": 0,
+          "lp_views": 0,
+          "reach": 0,
+          "leads": 0,
+          "cpm": 0,
+          "cpc": 0,
+          "cpl": 0,
+          "connect_rate": 0,
+          "lp_conv": 0,
+          "hook_rate": 0,
+          "vp25": 0,
+          "vp50": 0,
+          "vp75": 0,
+          "vp100": 0,
+          "wa_group": 0,
+          "cp_wa": 0,
+          "form_thanks": 0,
+          "cp_form": 0
         }
       ]
     },
@@ -8081,6 +8129,30 @@
           "cp_wa": 0,
           "form_thanks": 0,
           "cp_form": 0
+        },
+        {
+          "date": "2026-08-16",
+          "spend": 0,
+          "impressions": 0,
+          "clicks": 0,
+          "link_clicks": 0,
+          "lp_views": 0,
+          "reach": 0,
+          "leads": 0,
+          "cpm": 0,
+          "cpc": 0,
+          "cpl": 0,
+          "connect_rate": 0,
+          "lp_conv": 0,
+          "hook_rate": 0,
+          "vp25": 0,
+          "vp50": 0,
+          "vp75": 0,
+          "vp100": 0,
+          "wa_group": 0,
+          "cp_wa": 0,
+          "form_thanks": 0,
+          "cp_form": 0
         }
       ]
     },
@@ -10752,6 +10824,30 @@
         },
         {
           "date": "2026-08-15",
+          "spend": 0,
+          "impressions": 0,
+          "clicks": 0,
+          "link_clicks": 0,
+          "lp_views": 0,
+          "reach": 0,
+          "leads": 0,
+          "cpm": 0,
+          "cpc": 0,
+          "cpl": 0,
+          "connect_rate": 0,
+          "lp_conv": 0,
+          "hook_rate": 0,
+          "vp25": 0,
+          "vp50": 0,
+          "vp75": 0,
+          "vp100": 0,
+          "wa_group": 0,
+          "cp_wa": 0,
+          "form_thanks": 0,
+          "cp_form": 0
+        },
+        {
+          "date": "2026-08-16",
           "spend": 0,
           "impressions": 0,
           "clicks": 0,
