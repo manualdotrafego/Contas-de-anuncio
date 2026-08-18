@@ -1,0 +1,160 @@
+<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DevSpace - Campanha Ativa</title><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a0a;color:#eee;padding:22px}
+a{color:inherit}
+.head{border-bottom:3px solid #FFE500;padding-bottom:16px;margin-bottom:20px}
+.head h1{font-size:22px;font-weight:800}
+.head .sub{color:#8f8f8f;font-size:12.5px;margin-top:5px}
+.pill{display:inline-block;background:#1b1b1b;border:1px solid #2e2e2e;border-radius:20px;padding:3px 11px;font-size:11px;color:#bbb;margin-right:6px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:11px;margin:18px 0 24px}
+.kpi{background:#151515;border-radius:11px;padding:12px 14px;border-left:3px solid #FFE500}
+.kpi .v{font-size:19px;font-weight:800;color:#FFE500}
+.kpi .l{font-size:9.5px;color:#8f8f8f;text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+.kpi.g{border-left-color:#22c55e}.kpi.g .v{color:#22c55e}
+.kpi.r{border-left-color:#ef4444}.kpi.r .v{color:#ef4444}
+h2{font-size:14px;font-weight:800;margin:26px 0 12px;color:#FFE500;letter-spacing:.4px}
+.funil{background:#141414;border:1px solid #222;border-radius:13px;padding:18px}
+.fr{display:flex;align-items:center;gap:12px;margin-bottom:9px}
+.fbar{flex:1;background:#0d0d0d;border-radius:7px;height:34px;position:relative;overflow:hidden}
+.fbar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#FFE500,#f5b800);border-radius:7px}
+.fbar span{position:absolute;left:11px;top:0;height:34px;display:flex;align-items:center;font-size:12px;font-weight:800;color:#0a0a0a;z-index:2;text-shadow:0 0 3px rgba(255,255,255,.35)}
+.fl{width:200px;font-size:12px;color:#ccc;flex-shrink:0}
+.fl small{display:block;color:#777;font-size:10px}
+.fv{width:118px;text-align:right;font-size:12px;font-weight:700;flex-shrink:0}
+.fv small{display:block;color:#22c55e;font-weight:600;font-size:10.5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:15px}
+.card{background:#141414;border:1px solid #232323;border-radius:13px;overflow:hidden;display:flex;flex-direction:column}
+.card:hover{border-color:#FFE500}
+.ctop{display:flex;gap:11px;padding:13px}
+.thumb{width:82px;height:82px;border-radius:9px;object-fit:cover;background:#000;flex-shrink:0}
+.nothumb{width:82px;height:82px;border-radius:9px;background:#1e1e1e;display:flex;align-items:center;justify-content:center;color:#555;font-size:10px;flex-shrink:0}
+.cinfo{min-width:0;flex:1}
+.cname{font-weight:800;font-size:13px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cset{font-size:10.5px;color:#7d7d7d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ccopy{font-size:10.5px;color:#9a9a9a;margin-top:5px;line-height:1.35;max-height:44px;overflow:hidden}
+.mrow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 13px 11px}
+.m{background:#0e0e0e;border-radius:7px;padding:6px 7px;text-align:center}
+.m .v{font-weight:800;font-size:12.5px}.m .l{font-size:8px;color:#7d7d7d;text-transform:uppercase;margin-top:2px}
+.m.hk .v{color:#60a5fa}.m.ok .v{color:#22c55e}.m.bad .v{color:#ef4444}.m.y .v{color:#FFE500}
+.vid{padding:0 13px 11px}
+.vbar{display:flex;height:7px;border-radius:4px;overflow:hidden;background:#0d0d0d;margin-bottom:5px}
+.vbar i{display:block;height:7px}
+.vleg{display:flex;justify-content:space-between;font-size:9px;color:#7d7d7d}
+.cfun{display:flex;gap:4px;padding:0 13px 11px;flex-wrap:wrap}
+.st{background:#0e0e0e;border-radius:6px;padding:4px 7px;font-size:9.5px;color:#aaa}
+.st b{color:#FFE500;font-size:11px}
+.acts{display:flex;gap:7px;padding:0 13px 13px}
+.btn{flex:1;text-align:center;background:#FFE500;color:#0a0a0a;font-weight:800;font-size:10.5px;padding:7px;border-radius:7px;text-decoration:none}
+.btn.sec{background:#242424;color:#ccc}
+.btn.off{background:#1b1b1b;color:#555;pointer-events:none}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+.wrap{overflow-x:auto;background:#141414;border:1px solid #222;border-radius:13px}
+th{background:#1c1c1c;color:#FFE500;text-align:right;padding:9px 10px;font-size:9.5px;text-transform:uppercase;white-space:nowrap;position:sticky;top:0}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:#191919}
+td{padding:8px 10px;text-align:right;border-top:1px solid #202020;white-space:nowrap}
+tr:hover td{background:#1a1a1a}
+tfoot td{border-top:2px solid #FFE500;font-weight:800;background:#181818}
+.nota{background:#1c1512;border-left:3px solid #f59e0b;border-radius:8px;padding:11px 14px;font-size:11.5px;color:#e8cba6;margin-top:16px;line-height:1.5}
+.foot{text-align:center;color:#555;font-size:10.5px;margin-top:26px;font-family:monospace}
+</style></head><body>
+<div class="head">
+  <h1>DevSpace &middot; Campanha Ativa &middot; Hoje</h1>
+  <div class="sub" id="sub"></div>
+</div>
+<div class="kpis" id="kpis"></div>
+<h2>FUNIL DO DIA</h2>
+<div class="funil" id="funil"></div>
+<h2>CRIATIVOS</h2>
+<div class="grid" id="grid"></div>
+<h2>TABELA COMPLETA</h2>
+<div class="wrap"><table id="tab"></table></div>
+<div class="nota" id="nota"></div>
+<div class="foot" id="foot"></div>
+<script>
+const D=[{"ad_id": "120254155391440581", "nome": "ROBSON_V1", "conjunto": "[AD SET 1.1 - PUB QUENTE]", "campanha": "[ABO] - [VALIDAÇÃO CRIATIVO] - [0 AO EMPREGO]", "spend": 46.81, "impr": 3803, "reach": 2808, "freq": 1.35, "cpm": 12.31, "clicks": 57, "ctr": 1.5, "lc": 41, "ob": 40, "p3": 3688, "thru": 137, "p25": 107, "p50": 26, "p75": 19, "p100": 11, "avgw": 3, "lpv": 35, "atc": 2, "lead": 0, "ic": 0, "pur": 0, "rev": 0.0, "img": "", "post": "https://www.facebook.com/111487338031523_1076524888235890", "preview": "https://business.facebook.com/ads/api/preview_iframe.php?d=AQIYXnfHNmbFDcC9xy-FPLpvk9LlZfzNVakxbUyybXxT3J6QXloPnrOzwJdcDWgU7nEP5G0W063nPygtWaZPTu3q-mM2TC1Wcf0QDtfEkebkRJUebrlZqs2C2vri84SM9zoYeM6QXghsjgtW7OEFdzkdvN8YcJIwla1bf6CQM9y7ZKfym6aCCWQJUUSD-YthmBe8dGWC-J1kyqxi-KPPzHLXyEbkPAe2ITLVaKCTOgD7b4BnPklNQNcABCwUj1bXnOWqRErkNgXLoIUHuT4P2ezMwv_6ME4bVCHhkKzgPOcw5ORf6R15YT_wWR9_D_-dWsq1IUWtHo1VyH1eXRke4W5sDDkAPNjWnaZCElTglDyaN8SLFjfmmRuKB9pthF8uTJJ99Irxkrmst2I616cNQh_ZBAYuph28igpkKFkuhDkIBwmiiLzai26q2g4DOUP26Xc&t=AQLLSVR7DaJyHqSna2w", "tipo": "VIDEO", "copy": "Você vai ficar de fora dessa? \n\n- Clique em saiba mais e confira"}, {"ad_id": "120254155599070581", "nome": "PEDRO_V1", "conjunto": "[AD SET 1.2 - PUB QUENTE]", "campanha": "[ABO] - [VALIDAÇÃO CRIATIVO] - [0 AO EMPREGO]", "spend": 46.18, "impr": 3837, "reach": 3046, "freq": 1.26, "cpm": 12.04, "clicks": 42, "ctr": 1.09, "lc": 27, "ob": 27, "p3": 3677, "thru": 138, "p25": 85, "p50": 40, "p75": 13, "p100": 11, "avgw": 3, "lpv": 18, "atc": 1, "lead": 1, "ic": 1, "pur": 0, "rev": 0.0, "img": "", "post": "https://www.facebook.com/111487338031523_1076524964902549", "preview": "https://business.facebook.com/ads/api/preview_iframe.php?d=AQJBpqbFXK9AjhRxcEVDp8djzBcvAMUlfp5ylyuuqWqkLtkqCOrhOFkECd1HyAYSrnKT1pIVIE7L8nXk9MCSVZmlGGREr-sorXZjB9b9VLlXAom3jMR0u0aNHyzRELLslTekDYCS7HjIdDwkYPWReii1TdzIodPnzGMeLAQOV5yqanMSl8ISIKQGMQDjjGK1NEeiFJnwSAAMtuux6p6KN7QWO7PCW_ACiw9QNWfOzXQUzQlBwDdLmtPrUa4GV3SHRjToCcteKyhUwan72R8UyZkdJJcyqox-UcdHd_GZammty6fElLikpyP9sQnt4Xe51tkbMIXbz0fNol4w_zDL7higAqLBushHayz1P8Y3AJR6xNXanfct6H9N7ezQnmy12xq2EVVYqyVHIkqpoiTeSwfSKCYnWafgvvy1lMkzetBuPKALPlTd0Up34LOETESLOO4&t=AQJwmbblfN7L58fhA1o", "tipo": "VIDEO", "copy": "Você vai ficar de fora dessa? \n\n- Clique em saiba mais e confira"}, {"ad_id": "120254155613570581", "nome": "ROBSONV2", "conjunto": "[AD SET 1.3 - PUB QUENTE]", "campanha": "[ABO] - [VALIDAÇÃO CRIATIVO] - [0 AO EMPREGO]", "spend": 50.77, "impr": 4099, "reach": 3300, "freq": 1.24, "cpm": 12.39, "clicks": 65, "ctr": 1.59, "lc": 49, "ob": 49, "p3": 3908, "thru": 171, "p25": 141, "p50": 64, "p75": 31, "p100": 19, "avgw": 3, "lpv": 33, "atc": 2, "lead": 0, "ic": 0, "pur": 0, "rev": 0.0, "img": "", "post": "https://www.facebook.com/111487338031523_1076525074902538", "preview": "https://business.facebook.com/ads/api/preview_iframe.php?d=AQJBYKUyg-tihUQy1zdRSqV1oF0a_buyiSYI4DGH5ZRQgDKKztzw8gyknsXkDtxYRti_IDekJ_x9MzYD1V7wMSjRZI_PmzxFYu-Mml53ST4tkDzVjkbkm0SXrfLibBq3Nq6J3XpQ9kGzRjQEp4rJbhZMrp7AxsSyyuzht_ZSj0N0WNeMZrZuq6m_22Z_1I6_AjnBKj-wbB0plnx2Udz-JbLd2y8qxfHpLvj7rQzmOptVY9V5urnBCzdx9dMBtdgtFnV6-keZk0oLF4KWlGUt5HAWnY03nF0YBx0LplwJOCIJ5EG2NyUzuEuX9VYszEiGf6WEmU06qyJG32-dNRxMNNRlZQOvKH8RPDossCgFhPvMq5YSR-0SFqk4BN9gofRGNrCf9FAqWM5Exs9-Nw0aXqL_f5nAaAaCanLs_PZ0oCyQID4moLDbv1anD2lSobHcrzs&t=AQLt4878_rGok1PIWZQ", "tipo": "VIDEO", "copy": "Você vai ficar de fora dessa? \n\n- Clique em saiba mais e confira"}, {"ad_id": "120254155613590581", "nome": "ROBSONV3", "conjunto": "[AD SET 1.4 - PUB QUENTE]", "campanha": "[ABO] - [VALIDAÇÃO CRIATIVO] - [0 AO EMPREGO]", "spend": 45.97, "impr": 3340, "reach": 2578, "freq": 1.3, "cpm": 13.76, "clicks": 44, "ctr": 1.32, "lc": 30, "ob": 29, "p3": 3210, "thru": 117, "p25": 93, "p50": 26, "p75": 14, "p100": 8, "avgw": 2, "lpv": 24, "atc": 0, "lead": 0, "ic": 0, "pur": 0, "rev": 0.0, "img": "", "post": "https://www.facebook.com/111487338031523_1076524771569235", "preview": "https://business.facebook.com/ads/api/preview_iframe.php?d=AQKUUkzmuWUakukszT85hifwU29boMX2TUCWaPqTo9TVLhpT04MVyy3-IF8wFEWJOTB5VwKmopP2AdQBlEcVCbUUgTAieMXyVWNRSaEYZs8cKyDR_RLn12aMuPpvVyNNEO8stYKFpNhNfutYPLNDEMxszn1JhaP842Plr8vI1xUpRkiGguQoHLIxeAczU6wJeOtxPQBu91KKhmsfipW0RqlVXaCSR202CReqbrDWt2aJAeXXc5rlggz2RWJsjbevEu8ZCVyBKIYT3U5UTS8iuM-ZnEMB8ykL68xGEV8rybPvXHbNzFldSAjOJoMXdjgif2tAIW1VuVKxfgqfagzQIiKeVfYNqny0EWq8Me_v3XL1GCxY3lMB0AJ0s0zN2YGemA1PbDrNLQzP4enf2HNqdnXSK0A3J603fqeL_zsvP9JgwoRmbwlTF7I_eIj_Rgo2HEU&t=AQK1wfoRs_Vz_SoLHnw", "tipo": "VIDEO", "copy": "Você vai ficar de fora dessa? \n\n- Clique em saiba mais e confira"}, {"ad_id": "120254155613600581", "nome": "ROBSON_V5", "conjunto": "[AD SET 1.5 - PUB QUENTE]", "campanha": "[ABO] - [VALIDAÇÃO CRIATIVO] - [0 AO EMPREGO]", "spend": 45.63, "impr": 3041, "reach": 2478, "freq": 1.23, "cpm": 15.0, "clicks": 50, "ctr": 1.64, "lc": 32, "ob": 32, "p3": 2932, "thru": 130, "p25": 116, "p50": 52, "p75": 24, "p100": 11, "avgw": 3, "lpv": 24, "atc": 3, "lead": 0, "ic": 0, "pur": 0, "rev": 0.0, "img": "", "post": "https://www.facebook.com/111487338031523_1076524651569247", "preview": "https://business.facebook.com/ads/api/preview_iframe.php?d=AQK-J5tgcm58hXbKT2bqAukvu1Buz49avEYs-5xWpD2mQDpftCgM7eQgVFBdDPu-O1lPuSynX3GFhIY9MJ39fvosFLG-LXNSkVysR4u5qNycaBlyTSdpWYbvRr5bio-vUi0fbN_CcOtuVWKn-95QDUuEZd70f9jXH-AU3zCe_FbogyMxldqZTb9NoACdI7KOGcN43xNg0ARs1QcOYmvCvFhfAV7FRxSqh9gfXUHrRdIl7_5D0ZGIJ5g-HCRCCxGT7lQGRIE63Qz5ZI4zsnZ5VSTfnddDFL8IFsHiBD7jqG0rW-etaIG3PvF893Cg-sKnN-SPYeIVdL8mX0iyyjxzmVd9XSkZZfGkRdxjzQrsva6bkV2ppGY4k5sdU4Yyh4PBCkOYx6C2WOP1duhOVzqTyam0yeQrvZpo5fBcSPr18iGvzaeSHQ1ekl8gvvB0cToFs3E&t=AQI9IrvkuEOA8J6_qZQ", "tipo": "VIDEO", "copy": "Você vai ficar de fora dessa? \n\n- Clique em saiba mais e confira"}, {"ad_id": "120254155613610581", "nome": "ROBSON_V4", "conjunto": "[AD SET 1.4 - PUB QUENTE]", "campanha": "[ABO] - [VALIDAÇÃO CRIATIVO] - [0 AO EMPREGO]", "spend": 46.11, "impr": 3722, "reach": 2844, "freq": 1.31, "cpm": 12.39, "clicks": 45, "ctr": 1.21, "lc": 36, "ob": 35, "p3": 3498, "thru": 125, "p25": 100, "p50": 41, "p75": 22, "p100": 15, "avgw": 2, "lpv": 30, "atc": 0, "lead": 0, "ic": 0, "pur": 0, "rev": 0.0, "img": "", "post": "https://www.facebook.com/111487338031523_1076524844902561", "preview": "https://business.facebook.com/ads/api/preview_iframe.php?d=AQKm7EzXRWynzaYC13IPP78X-FXKf2UbYDOCQ-PGX3RqBZOrlTRqz_ohkjLRifv-aXBNT2iZtuhWEQIWsSdzU900l0v1tvYbhGnhtcMxTU_NZSqW8b4_-giQycCm-gptuKfhe555-VIDE9-9PejmJBXWlHI7NaMVDkIPLbZGjdWHD1MV-_aw30rvOM9oLEByLIAsf_0C0OoAHF_aQA_c-eK86uVbQ2IHVOuU93FkfHE_eWm7TvtujLYBDC_qnsCJlNkoz1PfcScessKmUU5XCjMCpL9AGiUXA3-02JLW_5Q4sG_-SuTTLSFDi_alKfPSTMEuswOjt4QF8zMe-wSNhHPIZqn-d0yKqgkO9StWA22RM8quhnRJcHr4dFS-GYRnQPVIvkg8FZ15P5yTyh7fGriNSAkn3bXUgE1vqYPQTtzbjdm7I_Oi3CD5r1wN09WPbeE&t=AQIhuoMf9fqFHfM-dFM", "tipo": "VIDEO", "copy": "Você vai ficar de fora dessa? \n\n- Clique em saiba mais e confira"}], META={"camp": "[ABO] - [VALIDAÇÃO CRIATIVO] - [0 AO EMPREGO]", "upd": "18/08/2026 18:51"};
+const n=v=>(v||0).toLocaleString('pt-BR');
+const m=v=>'R$ '+(v||0).toFixed(2).replace('.',',');
+const p=(a,b)=>b?(a/b*100):0;
+const pc=(a,b)=>p(a,b).toFixed(1).replace('.',',')+'%';
+const T=k=>D.reduce((s,x)=>s+(x[k]||0),0);
+const sp=T('spend'),im=T('impr'),p3=T('p3'),cl=T('clicks'),lc=T('lc'),ob=T('ob'),
+      lpv=T('lpv'),atc=T('atc'),ld=T('lead'),ic=T('ic'),pu=T('pur'),rev=T('rev'),p100=T('p100');
+document.getElementById('sub').innerHTML=
+ `<span class="pill">${META.camp}</span><span class="pill">${D.length} criativos</span>`+
+ `<span class="pill">atualizado ${META.upd}</span><span class="pill">a cada 2h pela VPS</span>`;
+document.getElementById('kpis').innerHTML=[
+ ['Investido hoje',m(sp),''],['Impressoes',n(im),''],['Alcance',n(T('reach')),''],
+ ['CPM',m(im?sp/im*1000:0),''],['Hook rate',pc(p3,im),'g'],
+ ['CTR',pc(cl,im),''],['Cliques saida',n(ob),''],
+ ['Page View',n(lpv),''],['Add carrinho',n(atc),''],
+ ['Leads',n(ld),ld?'':'r'],['Checkout',n(ic),''],
+ ['Compras',n(pu),pu?'g':'r'],['Receita',m(rev),pu?'g':''],
+ ['ROAS',(sp?rev/sp:0).toFixed(2)+'x',rev>=sp?'g':'r'],
+ ['Custo/compra',pu?m(sp/pu):'-',pu?'':'r']
+].map(([l,v,c])=>`<div class="kpi ${c}"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
+const F=[['Impressoes','quantas vezes apareceu',im,null],
+ ['Views 3s','hook: prendeu nos 3s',p3,im],
+ ['Cliques no anuncio','CTR total',cl,im],
+ ['Cliques de saida','saiu do Meta',ob,cl],
+ ['Page View','carregou a pagina',lpv,ob],
+ ['Add ao carrinho','clicou no botao',atc,lpv],
+ ['Lead','enviou o formulario',ld,atc],
+ ['Checkout Hotmart','abriu o checkout',ic,ld],
+ ['Compra','pagou',pu,ic]];
+document.getElementById('funil').innerHTML=F.map(([l,s,v,base])=>{
+ const w=im?Math.max(v/im*100,v>0?1.2:0):0;
+ const conv=base!==null?`<small>${pc(v,base)} da etapa anterior</small>`:'';
+ return `<div class="fr"><div class="fl">${l}<small>${s}</small></div>
+  <div class="fbar"><i style="width:${w}%"></i><span>${n(v)}</span></div>
+  <div class="fv">${sp&&v?m(sp/v):'-'}${conv}</div></div>`;}).join('');
+document.getElementById('grid').innerHTML=D.slice().sort((a,b)=>b.spend-a.spend).map(x=>{
+ const hook=p(x.p3,x.impr), hold=p(x.p100,x.p3);
+ const th=x.img?`<img class="thumb" src="${x.img}">`:'<div class="nothumb">sem<br>thumb</div>';
+ const seg=[['p25',x.p25,'#FFE500'],['p50',x.p50,'#f59e0b'],['p75',x.p75,'#fb923c'],['p100',x.p100,'#22c55e']];
+ const bars=x.p3?seg.map(([l,v,c])=>`<i style="width:${p(v,x.p3)}%;background:${c}"></i>`).join(''):'';
+ return `<div class="card">
+  <div class="ctop">${th}<div class="cinfo"><div class="cname" title="${x.nome}">${x.nome}</div>
+   <div class="cset">${x.conjunto}</div><div class="ccopy">${(x.copy||'').replace(/</g,'&lt;')}</div></div></div>
+  <div class="mrow">
+   <div class="m y"><div class="v">${m(x.spend)}</div><div class="l">Gasto</div></div>
+   <div class="m hk"><div class="v">${hook.toFixed(1)}%</div><div class="l">Hook 3s</div></div>
+   <div class="m ${hold>=15?'ok':'bad'}"><div class="v">${hold.toFixed(1)}%</div><div class="l">Hold 100%</div></div>
+   <div class="m"><div class="v">${(x.ctr||0).toFixed(2)}%</div><div class="l">CTR</div></div>
+  </div>
+  ${x.p3?`<div class="vid"><div class="vbar">${bars}</div>
+   <div class="vleg"><span>25%: ${n(x.p25)}</span><span>50%: ${n(x.p50)}</span><span>75%: ${n(x.p75)}</span><span>100%: ${n(x.p100)}</span></div></div>`:''}
+  <div class="cfun">
+   <div class="st">saida <b>${n(x.ob)}</b></div><div class="st">PV <b>${n(x.lpv)}</b></div>
+   <div class="st">carrinho <b>${n(x.atc)}</b></div><div class="st">lead <b>${n(x.lead)}</b></div>
+   <div class="st">checkout <b>${n(x.ic)}</b></div><div class="st">compra <b>${n(x.pur)}</b></div>
+  </div>
+  <div class="acts">
+   ${x.post?`<a class="btn" href="${x.post}" target="_blank">Ver post</a>`:'<span class="btn off">sem post</span>'}
+   ${x.preview?`<a class="btn sec" href="${x.preview}" target="_blank">Previa</a>`:'<span class="btn off">sem previa</span>'}
+  </div></div>`;}).join('');
+const COLS=[['Criativo','nome',0],['Gasto','spend',1],['Impr','impr',0],['CPM','cpm',1],
+ ['Hook','hook',2],['CTR','ctr',2],['Saida','ob',0],['PV','lpv',0],['Carrinho','atc',0],
+ ['Lead','lead',0],['Checkout','ic',0],['Compra','pur',0],['Receita','rev',1],['ROAS','roas',3]];
+const rows=D.slice().sort((a,b)=>b.spend-a.spend).map(x=>{
+ const o={...x,hook:p(x.p3,x.impr),roas:x.spend?x.rev/x.spend:0};
+ return '<tr>'+COLS.map(([,k,f])=>{
+  const v=o[k];
+  return `<td>${f===0?(typeof v==='string'?v:n(v)):f===1?m(v):f===2?(v||0).toFixed(2)+'%':(v||0).toFixed(2)+'x'}</td>`;
+ }).join('')+'</tr>';}).join('');
+document.getElementById('tab').innerHTML=
+ '<thead><tr>'+COLS.map(c=>`<th>${c[0]}</th>`).join('')+'</tr></thead><tbody>'+rows+'</tbody>'+
+ `<tfoot><tr><td>TOTAL</td><td>${m(sp)}</td><td>${n(im)}</td><td>${m(im?sp/im*1000:0)}</td>
+  <td>${p(p3,im).toFixed(2)}%</td><td>${p(cl,im).toFixed(2)}%</td><td>${n(ob)}</td><td>${n(lpv)}</td>
+  <td>${n(atc)}</td><td>${n(ld)}</td><td>${n(ic)}</td><td>${n(pu)}</td><td>${m(rev)}</td>
+  <td>${(sp?rev/sp:0).toFixed(2)}x</td></tr></tfoot>`;
+document.getElementById('nota').innerHTML=
+ `<b>Como ler:</b> <b>Hook rate</b> = views de 3s dividido por impressoes, mede se o criativo prende no inicio. `+
+ `<b>Hold</b> = quem viu 100% dividido por quem viu 3s, mede se segura ate o fim. `+
+ `<b>Cliques de saida</b> sao os que realmente sairam do Meta, numero mais honesto que o CTR total. `+
+ `<b>Add ao carrinho</b> aqui significa clique no botao de interesse, <b>Lead</b> e formulario enviado, `+
+ `<b>Checkout</b> e abertura do checkout da Hotmart. Dados do dia corrente no fuso da conta (America/Sao_Paulo), `+
+ `com a defasagem normal de atribuicao da Meta.`;
+document.getElementById('foot').textContent='manualdotrafego | act_592324092832640 | atualizacao automatica a cada 2h pela VPS';
+</script></body></html>
