@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-08-24T12:54:18Z",
+  "last_updated": "2026-08-24T18:42:50Z",
   "account": {
     "id": "act_592324092832640",
     "name": "Desafio do 0 ao Emprego",
@@ -11,8 +11,8 @@
   },
   "camp_filter": "0 ao emprego",
   "summary": {
-    "spend": 16871.26,
-    "impressions": 1476836,
+    "spend": 16871.37,
+    "impressions": 1476847,
     "clicks": 21524,
     "link_clicks": 13466,
     "lp_views": 9955,
@@ -28,8 +28,8 @@
     "vp50": 2.7,
     "vp75": 1.3,
     "vp100": 0.7,
-    "wa_group": 3186,
-    "cp_wa": 5.3,
+    "wa_group": 3188,
+    "cp_wa": 5.29,
     "form_thanks": 634,
     "cp_form": 26.61
   },
@@ -2843,12 +2843,12 @@
       "date": "2026-08-21"
     },
     {
-      "spend": 193.21,
-      "impressions": 16474,
+      "spend": 193.22,
+      "impressions": 16475,
       "clicks": 127,
       "link_clicks": 73,
       "lp_views": 56,
-      "reach": 9176,
+      "reach": 9189,
       "leads": 0,
       "cpm": 11.73,
       "cpc": 2.65,
@@ -2867,8 +2867,8 @@
       "date": "2026-08-22"
     },
     {
-      "spend": 214.35,
-      "impressions": 16351,
+      "spend": 214.45,
+      "impressions": 16361,
       "clicks": 139,
       "link_clicks": 76,
       "lp_views": 55,
@@ -2908,8 +2908,8 @@
       "vp50": 0,
       "vp75": 0,
       "vp100": 0,
-      "wa_group": 0,
-      "cp_wa": 0,
+      "wa_group": 2,
+      "cp_wa": 0.0,
       "form_thanks": 0,
       "cp_form": 0,
       "date": "2026-08-24"
@@ -8733,8 +8733,8 @@
       ]
     },
     {
-      "spend": 1824.33,
-      "impressions": 133101,
+      "spend": 1824.44,
+      "impressions": 133112,
       "clicks": 1470,
       "link_clicks": 931,
       "lp_views": 719,
@@ -8742,7 +8742,7 @@
       "leads": 11,
       "cpm": 13.71,
       "cpc": 1.96,
-      "cpl": 165.85,
+      "cpl": 165.86,
       "connect_rate": 77.2,
       "lp_conv": 1.2,
       "hook_rate": 13.6,
@@ -8750,8 +8750,8 @@
       "vp50": 0.8,
       "vp75": 0.4,
       "vp100": 0.2,
-      "wa_group": 21,
-      "cp_wa": 86.87,
+      "wa_group": 23,
+      "cp_wa": 79.32,
       "form_thanks": 0,
       "cp_form": 0,
       "id": "120254155391420581",
@@ -11567,12 +11567,12 @@
           "date": "2026-08-21"
         },
         {
-          "spend": 193.21,
-          "impressions": 16474,
+          "spend": 193.22,
+          "impressions": 16475,
           "clicks": 127,
           "link_clicks": 73,
           "lp_views": 56,
-          "reach": 9176,
+          "reach": 9189,
           "leads": 0,
           "cpm": 11.73,
           "cpc": 2.65,
@@ -11591,8 +11591,8 @@
           "date": "2026-08-22"
         },
         {
-          "spend": 214.35,
-          "impressions": 16351,
+          "spend": 214.45,
+          "impressions": 16361,
           "clicks": 139,
           "link_clicks": 76,
           "lp_views": 55,
@@ -11632,8 +11632,8 @@
           "vp50": 0,
           "vp75": 0,
           "vp100": 0,
-          "wa_group": 0,
-          "cp_wa": 0,
+          "wa_group": 2,
+          "cp_wa": 0.0,
           "form_thanks": 0,
           "cp_form": 0,
           "date": "2026-08-24"
@@ -14815,8 +14815,8 @@
       "preview_url": "https://www.facebook.com/watch?v=1928711127749824"
     },
     {
-      "spend": 947.69,
-      "impressions": 70705,
+      "spend": 947.8,
+      "impressions": 70716,
       "clicks": 647,
       "link_clicks": 382,
       "lp_views": 283,
@@ -14824,7 +14824,7 @@
       "leads": 6,
       "cpm": 13.4,
       "cpc": 2.48,
-      "cpl": 157.95,
+      "cpl": 157.97,
       "connect_rate": 74.1,
       "lp_conv": 1.6,
       "hook_rate": 12.7,
@@ -14832,8 +14832,8 @@
       "vp50": 0.6,
       "vp75": 0.3,
       "vp100": 0.2,
-      "wa_group": 14,
-      "cp_wa": 67.69,
+      "wa_group": 15,
+      "cp_wa": 63.19,
       "form_thanks": 0,
       "cp_form": 0,
       "id": "120254155599070581",
