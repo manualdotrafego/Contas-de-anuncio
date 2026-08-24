@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-08-24T07:02:20Z",
+  "last_updated": "2026-08-24T12:54:18Z",
   "account": {
     "id": "act_592324092832640",
     "name": "Desafio do 0 ao Emprego",
@@ -11,8 +11,8 @@
   },
   "camp_filter": "0 ao emprego",
   "summary": {
-    "spend": 16871.19,
-    "impressions": 1476828,
+    "spend": 16871.26,
+    "impressions": 1476836,
     "clicks": 21524,
     "link_clicks": 13466,
     "lp_views": 9955,
@@ -2867,12 +2867,12 @@
       "date": "2026-08-22"
     },
     {
-      "spend": 214.28,
-      "impressions": 16343,
+      "spend": 214.35,
+      "impressions": 16351,
       "clicks": 139,
       "link_clicks": 76,
       "lp_views": 55,
-      "reach": 9050,
+      "reach": 9056,
       "leads": 0,
       "cpm": 13.11,
       "cpc": 2.82,
@@ -2891,15 +2891,14 @@
       "date": "2026-08-23"
     },
     {
-      "date": "2026-08-24",
-      "spend": 0,
+      "spend": 0.0,
       "impressions": 0,
       "clicks": 0,
       "link_clicks": 0,
       "lp_views": 0,
       "reach": 0,
       "leads": 0,
-      "cpm": 0,
+      "cpm": 0.0,
       "cpc": 0,
       "cpl": 0,
       "connect_rate": 0,
@@ -2912,7 +2911,8 @@
       "wa_group": 0,
       "cp_wa": 0,
       "form_thanks": 0,
-      "cp_form": 0
+      "cp_form": 0,
+      "date": "2026-08-24"
     }
   ],
   "campaigns": [
@@ -8733,8 +8733,8 @@
       ]
     },
     {
-      "spend": 1824.26,
-      "impressions": 133093,
+      "spend": 1824.33,
+      "impressions": 133101,
       "clicks": 1470,
       "link_clicks": 931,
       "lp_views": 719,
@@ -8742,10 +8742,10 @@
       "leads": 11,
       "cpm": 13.71,
       "cpc": 1.96,
-      "cpl": 165.84,
+      "cpl": 165.85,
       "connect_rate": 77.2,
       "lp_conv": 1.2,
-      "hook_rate": 13.5,
+      "hook_rate": 13.6,
       "vp25": 2.0,
       "vp50": 0.8,
       "vp75": 0.4,
@@ -11591,12 +11591,12 @@
           "date": "2026-08-22"
         },
         {
-          "spend": 214.28,
-          "impressions": 16343,
+          "spend": 214.35,
+          "impressions": 16351,
           "clicks": 139,
           "link_clicks": 76,
           "lp_views": 55,
-          "reach": 9050,
+          "reach": 9056,
           "leads": 0,
           "cpm": 13.11,
           "cpc": 2.82,
@@ -11615,15 +11615,14 @@
           "date": "2026-08-23"
         },
         {
-          "date": "2026-08-24",
-          "spend": 0,
+          "spend": 0.0,
           "impressions": 0,
           "clicks": 0,
           "link_clicks": 0,
           "lp_views": 0,
           "reach": 0,
           "leads": 0,
-          "cpm": 0,
+          "cpm": 0.0,
           "cpc": 0,
           "cpl": 0,
           "connect_rate": 0,
@@ -11636,7 +11635,8 @@
           "wa_group": 0,
           "cp_wa": 0,
           "form_thanks": 0,
-          "cp_form": 0
+          "cp_form": 0,
+          "date": "2026-08-24"
         }
       ]
     },
@@ -14815,8 +14815,8 @@
       "preview_url": "https://www.facebook.com/watch?v=1928711127749824"
     },
     {
-      "spend": 947.62,
-      "impressions": 70697,
+      "spend": 947.69,
+      "impressions": 70705,
       "clicks": 647,
       "link_clicks": 382,
       "lp_views": 283,
@@ -14824,7 +14824,7 @@
       "leads": 6,
       "cpm": 13.4,
       "cpc": 2.48,
-      "cpl": 157.94,
+      "cpl": 157.95,
       "connect_rate": 74.1,
       "lp_conv": 1.6,
       "hook_rate": 12.7,
